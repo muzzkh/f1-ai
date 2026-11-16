@@ -3,7 +3,7 @@
 GitHub Pages cannot run the Streamlit dashboard, so this exports a snapshot
 of the latest race weekend as one self-contained page with interactive charts.
 
-    python dashboard/build_site.py [--year 2025 --event "Abu Dhabi"] [--repo-url URL]
+    python dashboard/build_site.py [--year 2025 --event "Abu Dhabi"] [--if-new] [--repo-url URL]
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import html
+import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -328,6 +329,19 @@ footer{color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);marg
 """
 
 
+MARKER = "build.json"  # which race weekend the built site shows
+
+
+def is_current(out: Path) -> bool:
+    """True when the built site already shows the latest finished race weekend."""
+    try:
+        built = json.loads((out / MARKER).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    year, rnd, _ = data.latest_completed_event()
+    return (built.get("year"), built.get("round")) == (year, rnd)
+
+
 def build(out: Path, year: int | None, event: str | None, repo_url: str) -> Path:
     if year and event:
         race = data.load_session(year, event, "R")
@@ -387,6 +401,7 @@ def build(out: Path, year: int | None, event: str | None, repo_url: str) -> Path
 </html>"""
     index = out / "index.html"
     index.write_text(page, encoding="utf-8")
+    (out / MARKER).write_text(json.dumps({"year": race.year, "round": race.round, "event": race.event_name}), encoding="utf-8")
     print(f"wrote {index} ({index.stat().st_size // 1024} KB)")
     return index
 
@@ -400,7 +415,12 @@ def main() -> None:
     p.add_argument("--event")
     p.add_argument("--out", default=str(ROOT / "docs"))
     p.add_argument("--repo-url", default="https://github.com/muzzkh/f1-ai")
+    p.add_argument("--if-new", action="store_true",
+                   help="do nothing if the site already shows the latest finished race weekend")
     args = p.parse_args()
+    if args.if_new and not (args.year and args.event) and is_current(Path(args.out)):
+        print("site already shows the latest race weekend; nothing to do")
+        return
     build(Path(args.out), args.year, args.event, args.repo_url)
 
 

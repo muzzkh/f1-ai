@@ -1,0 +1,61 @@
+name: Update website
+
+# Rebuilds the GitHub Pages site (docs/) from the latest finished race weekend.
+# Runs every Monday morning, after any Sunday race has finished; it does
+# nothing when there has been no new race since the last build.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Mondays 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if the site already shows the latest race
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install
+        run: python -m pip install -e .
+
+      - name: Build site
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          if [ "$FORCE" = "true" ]; then
+            python dashboard/build_site.py --repo-url "https://github.com/${{ github.repository }}"
+          else
+            python dashboard/build_site.py --if-new --repo-url "https://github.com/${{ github.repository }}"
+          fi
+
+      - name: Commit and push if the site changed
+        run: |
+          git add docs
+          if git diff --cached --quiet; then
+            echo "No change to the site."
+            exit 0
+          fi
+          event=$(python -c "import json; d = json.load(open('docs/build.json')); print(d['year'], d['event'])")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update website: $event"
+          git push

@@ -106,7 +106,17 @@ Command line (an invented lap, works offline; use `--year --event --driver` for 
 
 GitHub Pages serves the static site in `docs/`. It cannot run the live
 dashboard, so the site is a snapshot: one page with interactive charts for the
-latest race weekend. To refresh it after a race, rebuild and push:
+latest race weekend.
+
+It refreshes itself: the `Update website` workflow
+(`.github/workflows/update-site.yml`) runs every Monday at 06:00 UTC, rebuilds
+the site if a new race has finished since the last build, and commits the
+result. It can also be started by hand from the repository's Actions tab.
+GitHub pauses scheduled workflows after 60 days without repository activity
+(the winter break is longer than that), so re-enable it there before the new
+season if it has been paused.
+
+To rebuild by hand:
 
 ```bash
 .venv/Scripts/python.exe dashboard/build_site.py
