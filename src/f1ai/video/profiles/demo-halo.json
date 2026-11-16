@@ -1,0 +1,128 @@
+{
+  "name": "demo-halo",
+  "description": "Circular dial at bottom centre with curved throttle and brake gauges, similar in arrangement to modern broadcast onboards. Matches videos made by the f1ai renderer; real footage needs its own calibrated copy.",
+  "panel": {
+    "shape": "circle",
+    "center": [
+      0.5,
+      0.8125
+    ],
+    "radius": 0.1639
+  },
+  "elements": {
+    "speed": {
+      "kind": "digits",
+      "roi": [
+        0.4516,
+        0.7569,
+        0.5484,
+        0.8333
+      ],
+      "max_digits": 3
+    },
+    "gear": {
+      "kind": "digits",
+      "roi": [
+        0.4844,
+        0.8639,
+        0.5156,
+        0.9306
+      ],
+      "max_digits": 1
+    },
+    "throttle": {
+      "kind": "arc",
+      "center": [
+        0.5,
+        0.8125
+      ],
+      "r_inner": 0.1375,
+      "r_outer": 0.1569,
+      "start_deg": 55,
+      "end_deg": -55,
+      "hsv_lo": [
+        40,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        85,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        100
+      ]
+    },
+    "brake": {
+      "kind": "arc",
+      "center": [
+        0.5,
+        0.8125
+      ],
+      "r_inner": 0.1375,
+      "r_outer": 0.1569,
+      "start_deg": 125,
+      "end_deg": 235,
+      "hsv_lo": [
+        170,
+        100,
+        100
+      ],
+      "hsv_hi": [
+        10,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        100
+      ]
+    },
+    "rpm": {
+      "kind": "bar",
+      "roi": [
+        0.4648,
+        0.6931,
+        0.5352,
+        0.7083
+      ],
+      "direction": "right",
+      "hsv_lo": [
+        90,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        125,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        15000
+      ]
+    },
+    "drs": {
+      "kind": "indicator",
+      "roi": [
+        0.4781,
+        0.7194,
+        0.5219,
+        0.7472
+      ],
+      "hsv_lo": [
+        40,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        85,
+        255,
+        255
+      ],
+      "threshold": 0.3
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "demo-bars",
+  "description": "Rectangular panel at bottom left with straight throttle, brake and RPM bars. Matches videos made by the f1ai renderer; real footage needs its own calibrated copy.",
+  "panel": {
+    "shape": "rect",
+    "roi": [
+      0.0312,
+      0.7778,
+      0.3281,
+      0.9583
+    ]
+  },
+  "elements": {
+    "speed": {
+      "kind": "digits",
+      "roi": [
+        0.0437,
+        0.7972,
+        0.1484,
+        0.8889
+      ],
+      "max_digits": 3
+    },
+    "gear": {
+      "kind": "digits",
+      "roi": [
+        0.1594,
+        0.8056,
+        0.1953,
+        0.8833
+      ],
+      "max_digits": 1
+    },
+    "throttle": {
+      "kind": "bar",
+      "roi": [
+        0.2109,
+        0.8056,
+        0.3164,
+        0.8278
+      ],
+      "direction": "right",
+      "hsv_lo": [
+        40,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        85,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        100
+      ]
+    },
+    "brake": {
+      "kind": "bar",
+      "roi": [
+        0.2109,
+        0.8417,
+        0.3164,
+        0.8639
+      ],
+      "direction": "right",
+      "hsv_lo": [
+        170,
+        100,
+        100
+      ],
+      "hsv_hi": [
+        10,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        100
+      ]
+    },
+    "rpm": {
+      "kind": "bar",
+      "roi": [
+        0.0437,
+        0.9111,
+        0.3164,
+        0.9278
+      ],
+      "direction": "right",
+      "hsv_lo": [
+        90,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        125,
+        255,
+        255
+      ],
+      "scale": [
+        0,
+        15000
+      ]
+    },
+    "drs": {
+      "kind": "indicator",
+      "roi": [
+        0.2109,
+        0.875,
+        0.2516,
+        0.9
+      ],
+      "hsv_lo": [
+        40,
+        90,
+        90
+      ],
+      "hsv_hi": [
+        85,
+        255,
+        255
+      ],
+      "threshold": 0.3
+    }
+  }
+}

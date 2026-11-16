@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "f1ai"
+version = "0.1.0"
+description = "Formula 1 AI toolkit: data analysis, strategy modelling, video-to-telemetry, MCP server and dashboard"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "joblib>=1.3",
+    "plotly>=5.20",
+    "streamlit>=1.40",
+    "opencv-python-headless>=4.9",
+    "pillow>=10.0",
+    "mcp>=1.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+f1ai = "f1ai.cli:main"
+f1ai-mcp = "f1ai.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+f1ai = ["video/profiles/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["network: needs to download F1 timing data"]
+filterwarnings = ["ignore:The 'generic' unit for NumPy timedelta:DeprecationWarning"]

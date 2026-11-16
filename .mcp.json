@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "f1ai": {
+      "command": ".venv/Scripts/python.exe",
+      "args": ["-m", "f1ai.mcp_server"]
+    }
+  }
+}
