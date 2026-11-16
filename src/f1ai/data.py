@@ -59,6 +59,13 @@ class DataError(RuntimeError):
 # HTTP + cache
 # ----------------------------------------------------------------------------
 
+def _utc(values, errors: str = "raise") -> pd.Series:
+    """Parse ISO timestamps to UTC at nanosecond resolution. Pinning the
+    resolution keeps pandas 2 and 3 (which default differently) in agreement
+    when timestamps are compared or merged."""
+    return pd.to_datetime(values, utc=True, errors=errors, format="ISO8601").astype("datetime64[ns, UTC]")
+
+
 def _now() -> pd.Timestamp:
     return pd.Timestamp(datetime.now(timezone.utc))
 
@@ -287,7 +294,7 @@ def _build_laps(raw: dict, drivers: pd.DataFrame, is_race: bool) -> pd.DataFrame
             "Sector3": pd.to_numeric(laps["duration_sector_3"], errors="coerce"),
             "SpeedTrap": pd.to_numeric(laps["st_speed"], errors="coerce"),
             "PitOut": laps.get("is_pit_out_lap", False).fillna(False).astype(bool),
-            "LapStart": pd.to_datetime(laps["date_start"], utc=True, errors="coerce", format="ISO8601"),
+            "LapStart": _utc(laps["date_start"], errors="coerce"),
         }
     )
     df["Driver"] = df["DriverNumber"].map(info["Driver"])
@@ -319,7 +326,7 @@ def _build_laps(raw: dict, drivers: pd.DataFrame, is_race: bool) -> pd.DataFrame
     lap_end = df["LapStart"] + pd.to_timedelta(df["LapTime"].fillna(0), unit="s")
     rc = pd.DataFrame(raw["race_control"])
     if not rc.empty:
-        rc["date"] = pd.to_datetime(rc["date"], utc=True, format="ISO8601")
+        rc["date"] = _utc(rc["date"])
         for t0, t1, kind in _neutralised_intervals(rc):
             m = df["LapStart"].notna() & (df["LapStart"] < t1) & (lap_end > t0)
             df.loc[m, "TrackStatus"] = kind
@@ -328,7 +335,7 @@ def _build_laps(raw: dict, drivers: pd.DataFrame, is_race: bool) -> pd.DataFrame
     df["Position"] = np.nan
     pos = pd.DataFrame(raw["position"])
     if is_race and not pos.empty:
-        pos["date"] = pd.to_datetime(pos["date"], utc=True, format="ISO8601")
+        pos["date"] = _utc(pos["date"])
         pos = pos.sort_values("date")
         timed = df[df["LapStart"].notna()].assign(_end=lap_end).sort_values("_end")
         merged = pd.merge_asof(
@@ -513,7 +520,7 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
     car = pd.DataFrame(_openf1("car_data", **window))
     if car.empty or len(car) < 20:
         raise DataError(f"No car telemetry available for {drv} lap {int(lap['LapNumber'])}.")
-    car["date"] = pd.to_datetime(car["date"], utc=True, format="ISO8601")
+    car["date"] = _utc(car["date"])
     car = car.sort_values("date").drop_duplicates("date")
     t = (car["date"] - t0).dt.total_seconds().values
     speed = pd.to_numeric(car["speed"], errors="coerce").ffill().bfill().values.astype(float)
@@ -537,7 +544,7 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
     tel["X"], tel["Y"] = np.nan, np.nan
     loc = pd.DataFrame(_openf1("location", **window))
     if len(loc) > 20:
-        loc["date"] = pd.to_datetime(loc["date"], utc=True, format="ISO8601")
+        loc["date"] = _utc(loc["date"])
         loc = loc.sort_values("date").drop_duplicates("date")
         loc = loc[(loc["x"] != 0) | (loc["y"] != 0)]
         lt = (loc["date"] - t0).dt.total_seconds().values
