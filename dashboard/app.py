@@ -299,8 +299,11 @@ def view_video() -> None:
                 return
             name = f"{ses.year}-r{ses.round:02d}-{ses.code}-{tel.attrs['driver']}-lap{tel.attrs['lap_number']}-{prof}.mp4"
             bar = st.progress(0.0, "Rendering...")
+            from f1ai.video import scene as hud_scene
+
             info = hud_render.render_onboard(
                 tel, VIDEO_DIR / name, prof, max_seconds=secs, progress=lambda p: bar.progress(min(p, 1.0), "Rendering..."),
+                scene=hud_scene.for_lap(ses, tel),
                 caption=f"{tel.attrs['driver']}  {ses.event_name} {ses.year}  {ses.name}  lap {tel.attrs['lap_number']}")
             bar.empty()
             ss["video"] = {"path": info["path"], "profile": prof, "reference": tel,

@@ -194,7 +194,7 @@ class _Scene:
         self.noise = [rng.normal(0, noise, (height, width, 3)).astype(np.int16) for _ in range(6)] if noise > 0 else []
         self.rng = rng
 
-    def frame(self, i: int, distance: float, speed: float) -> np.ndarray:
+    def frame(self, i: int, distance: float, speed: float, lap_t: float = 0.0) -> np.ndarray:
         f = self.base.copy()
         w, h, hz = self.w, self.h, self.horizon
         cx = w // 2 + int(40 * np.sin(distance / 180.0))  # the road wanders a little
@@ -226,8 +226,14 @@ class _Scene:
 
 def _open_writer(path: Path, fps: float, size: tuple[int, int]):
     """Open a writer with the first codec this OpenCV build supports."""
+    if path.suffix.lower() == ".webm":  # VP8: plays in every browser
+        wr = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"VP80"), fps, size)
+        if wr.isOpened():
+            return wr, "VP80"
+        wr.release()
+        raise RuntimeError("This OpenCV build cannot write WebM (VP8) video.")
     if path.suffix.lower() != ".mp4":
-        raise ValueError("Output video must be an .mp4 file.")
+        raise ValueError("Output video must be an .mp4 or .webm file.")
     # H.264 (plays in browsers) when this OpenCV build has it, else MPEG-4.
     for fourcc in ("avc1", "mp4v"):
         wr = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*fourcc), fps, size)
@@ -268,8 +274,15 @@ def render_onboard(
     noise: float = 5.0,
     caption: str | None = None,
     progress: Callable[[float], None] | None = None,
+    scene=None,
 ) -> dict:
-    """Render telemetry as an onboard-style video. Returns info about the file."""
+    """Render telemetry as an onboard-style video. Returns info about the file.
+
+    `scene` is a factory `(width, height) -> object with .frame(i, distance,
+    speed, lap_t)` that draws the view behind the HUD. Pass
+    `scene.for_lap(...)` to get the real circuit; without one, a plain
+    placeholder road is drawn (used for invented laps that have no circuit).
+    """
     layout = load_profile(profile)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -282,12 +295,13 @@ def render_onboard(
         painter = ClusterPainter(layout, w, h)
     else:
         painter = HudPainter(layout, w, h)
-    scene = _Scene(w, h, noise)
+    view = scene(w, h) if scene is not None else _Scene(w, h, noise)
+    t_first = float(tel["Time"].min())
     rpm_max = float(np.percentile(tel["RPM"], 99.5))
     writer, codec = _open_writer(out_path, fps, (w, h))
     try:
         for i, row in enumerate(vals.itertuples(index=False)):
-            frame = scene.frame(i, float(dist[i]), float(row.Speed))
+            frame = view.frame(i, float(dist[i]), float(row.Speed), t_first + float(row.Time))
             if caption:
                 cv2.putText(frame, caption, (int(24 * w / 1280), int(40 * h / 720)), cv2.FONT_HERSHEY_SIMPLEX,
                             0.7 * h / 720, (255, 255, 255), 2, cv2.LINE_AA)

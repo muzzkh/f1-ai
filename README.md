@@ -69,10 +69,11 @@ up each race by itself. GitHub pauses scheduled workflows after 60 days
 without repository activity (the winter break is longer than that), so
 re-enable it in the Actions tab before a new season.
 
-Preview locally with any static server, for example:
+Preview locally (this small server supports video seeking, which Python's
+built-in one does not):
 
 ```bash
-.venv/Scripts/python.exe -m http.server 8600 --directory docs
+.venv/Scripts/python.exe dashboard/serve_site.py
 ```
 
 The design direction (palette, type, grid, motion) is in `design/brief.md`.

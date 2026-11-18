@@ -19,7 +19,7 @@
     <div class="wrap">
       <p class="eyebrow t-label" id="eyebrow"></p>
       <h1 class="t-display">Video to<br><em>telemetry</em></h1>
-      <p class="lede">The reader looks at an onboard video frame by frame and recovers speed, gear, throttle, brake and revs from the on-screen cluster alone. The clip below was rendered from a real lap, so every reading can be checked against the truth.</p>
+      <p class="lede">The reader watches a video frame by frame and recovers speed, gear, throttle, brake and revs from the on-screen cluster alone. The clip is generated from a real lap on the real circuit, so every reading can be checked against the truth.</p>
     </div>
   </section>
 
@@ -27,27 +27,35 @@
     <div class="wrap">
       <div class="lab">
         <div class="lab__view">
-          <div class="lab__frame"><canvas id="frame" role="img" aria-label="A frame of the rendered onboard video"></canvas><svg id="regions" aria-hidden="true"></svg></div>
+          <div class="lab__frame">
+            <video id="clip" muted loop playsinline preload="auto" aria-label="A lap of the real circuit seen from the car, with the instrument cluster"></video>
+            <svg id="regions" aria-hidden="true"></svg>
+          </div>
           <div class="lab__bar">
             <button class="play" id="play" type="button" aria-label="Pause"><svg viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M2 1h3.5v12H2zM8.5 1H12v12H8.5z"/></svg></button>
             <label class="check"><input type="checkbox" id="showRegions" checked> Show where the reader looks</label>
             <b class="t-num" id="clock">0.00 s</b>
           </div>
+          <p class="note">The road is the real circuit: true corner shapes, order and elevation, driven at the real speed. Track width, kerbs, scenery and the car are stylised. It is generated, not footage.</p>
         </div>
         <div class="lab__read">
-          <h3 class="t-label">Read from this frame</h3>
-          <table class="readout" id="readout"></table>
-          <p class="note">Read: what the reader got from the pixels. Truth: the telemetry the frame was drawn from.</p>
+          <h3 class="t-label">Rebuilt from the pixels alone</h3>
+          <div class="lab__rebuilt">
+            <div class="cluster" id="cluster"></div>
+            <svg class="track" id="map" role="img" aria-label="The car placed on the circuit using only the speed read from the video"></svg>
+          </div>
+          <p class="note">This cluster and the dot on the circuit are driven only by what the reader recovered from the video. The position comes from adding up the speed it read, frame by frame.</p>
         </div>
       </div>
-      <div id="trace"></div>
+      <div class="cells" id="cells"></div>
+      <div id="readTrace"></div>
     </div>
   </section>
 
   <section class="band">
     <div class="wrap">
       <header class="band__head"><h2 class="t-display">Accuracy</h2>
-        <p>Measured over the whole clip against the telemetry it was rendered from, after MPEG-4 compression.</p></header>
+        <p>Measured over the whole clip against the telemetry it was generated from, after video compression (VP8).</p></header>
       <div class="tiles" id="tiles"></div>
       <p class="quiet">This is measured on footage the project renders itself. Real broadcast video uses a different on-screen design, so it needs its own layout profile, calibrated in the dashboard. That has not been tested yet.</p>
     </div>

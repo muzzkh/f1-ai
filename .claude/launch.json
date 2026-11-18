@@ -18,11 +18,8 @@
       "name": "f1ai-site",
       "runtimeExecutable": ".venv/Scripts/python.exe",
       "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8600",
-        "--directory",
-        "docs"
+        "dashboard/serve_site.py",
+        "8600"
       ],
       "port": 8600
     }

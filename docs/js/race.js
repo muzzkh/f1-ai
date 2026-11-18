@@ -36,7 +36,7 @@ $("facts").innerHTML = [
   ["Race distance", `${E.laps} laps`, `${((E.laps * T.length) / 1000).toFixed(0)} km around ${E.circuit}`],
   ["Fastest lap", lapTime(fastest.best), `${fastest.name}, ${fastest.team}`],
   ["Biggest climb", `${climber.code} +${climber.grid - climber.pos}`, `P${climber.grid} on the grid to P${climber.pos}`],
-  ["Track", W.track_temp_c != null ? `${Math.round(W.track_temp_c)} °C` : "-", `${W.rain ? "Rain during the race" : "Dry throughout"} · ${climb.toFixed(0)} m of elevation`],
+  ["Track", W.track_temp_c != null ? `${Math.round(W.track_temp_c)} °C` : "-", `${W.rain ? "Rain during the race" : "Dry throughout"}${T.gps === false ? "" : ` · ${climb.toFixed(0)} m of elevation`}`],
 ].map(([k, v, n]) => `<div class="fact"><dt class="t-label">${esc(k)}</dt><dd><div class="v t-num">${esc(v)}</div><div class="n">${esc(n)}</div></dd></div>`).join("");
 
 // ---------- circuit ----------
@@ -47,6 +47,12 @@ track.pitLane(T.pit, track.project);
 track.mark(0, "S/F", true);
 T.sectors.forEach((s, i) => track.mark(s, `S${i + 1}▸S${i + 2}`));
 track.corners(T.corners);
+
+// say so when the data behind the map is thinner than usual
+const caveats = [];
+if (T.gps === false) caveats.push("No GPS positions were recorded for this race, so the lap is placed along the circuit by distance alone and there is no elevation or pit lane.");
+if (T.surveyed === false) caveats.push("There is no survey of this circuit, so its outline is traced from the lap itself and corners are not numbered.");
+if (caveats.length) { $("trackNote").textContent = caveats.join(" "); $("trackNote").hidden = false; }
 
 const vMin = Math.min(...L.speed), vMax = Math.max(...L.speed);
 const LAYERS = {

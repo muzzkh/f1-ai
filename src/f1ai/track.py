@@ -82,6 +82,8 @@ def _lap_s(cx: np.ndarray, cy: np.ndarray, length: float, lap: pd.DataFrame) -> 
     n = len(cx)
     s_all = np.arange(n + 1) * (length / n)
     own = lap["Distance"].values * (length / lap["Distance"].iloc[-1])
+    if lap["X"].isna().any():  # no position data: the car's own distance is all there is
+        return own
     gps = _project_onto_path(lap["X"].values, lap["Y"].values, _loop(cx), _loop(cy), s_all, expected_s=own)
     drift = uniform_filter1d(median_filter(gps - own, size=5, mode="nearest"), size=15, mode="nearest")
     return np.maximum.accumulate(own + drift)
@@ -97,33 +99,41 @@ def build_track(ses: data.Session, lap: pd.DataFrame, step: float = 4.0) -> dict
     raw_x, raw_y (survey orientation, for projecting GPS), corners, length.
     """
     info = data.circuit_info(ses)
-    if not info.get("x") or lap["X"].isna().any():
+    gps = not lap["X"].isna().any()
+    surveyed = bool(info.get("x"))
+    if surveyed:
+        ox, oy = np.asarray(info["x"], float) / 10.0, np.asarray(info["y"], float) / 10.0
+    elif gps:  # no survey for this circuit: trace the outline from the lap itself
+        ox, oy = lap["X"].values, lap["Y"].values
+    else:
         raise TrackError("No circuit outline or GPS position available for this session.")
-    ox, oy = np.asarray(info["x"], float) / 10.0, np.asarray(info["y"], float) / 10.0
     cx, cy, length = _closed_spline(ox, oy, step)
     n = len(cx)
     ds = length / n
     s_all = np.arange(n + 1) * ds
 
-    # direction of travel: the car must move forwards along the outline
-    lx, ly = lap["X"].values, lap["Y"].values
-    j = len(lx) // 4
-    q = _project_onto_path(lx[[j, j + 8]], ly[[j, j + 8]], _loop(cx), _loop(cy), s_all)
-    if ((q[1] - q[0]) % length) > length / 2:
-        cx, cy = cx[::-1].copy(), cy[::-1].copy()
+    if gps and surveyed:
+        # direction of travel: the car must move forwards along the outline
+        lx, ly = lap["X"].values, lap["Y"].values
+        j = len(lx) // 4
+        q = _project_onto_path(lx[[j, j + 8]], ly[[j, j + 8]], _loop(cx), _loop(cy), s_all)
+        if ((q[1] - q[0]) % length) > length / 2:
+            cx, cy = cx[::-1].copy(), cy[::-1].copy()
 
-    # start line: where the car was at lap time zero
-    first = _project_onto_path(lx[:1], ly[:1], _loop(cx), _loop(cy), s_all)[0]
-    start = (first - lap["Distance"].iloc[0] * (length / lap["Distance"].iloc[-1])) % length
-    k = int(round(start / ds)) % n
-    cx, cy = np.roll(cx, -k), np.roll(cy, -k)
+        # start line: where the car was at lap time zero
+        first = _project_onto_path(lx[:1], ly[:1], _loop(cx), _loop(cy), s_all)[0]
+        start = (first - lap["Distance"].iloc[0] * (length / lap["Distance"].iloc[-1])) % length
+        k = int(round(start / ds)) % n
+        cx, cy = np.roll(cx, -k), np.roll(cy, -k)
+    # Without GPS the survey is taken as it comes: it is itself a recorded lap,
+    # so it starts at the line and runs in the direction of travel.
 
     rot = float(info.get("rotation", 0.0))
     rx, ry = rotate(cx, cy, rot)
     grid = np.arange(n) * ds
 
     z = np.zeros(n)
-    if "Z" in lap and lap["Z"].notna().all():
+    if gps and "Z" in lap and lap["Z"].notna().all():
         s = _lap_s(cx, cy, length, lap)
         raw = np.interp(grid, s, lap["Z"].values)
         z = uniform_filter1d(median_filter(raw, size=9, mode="wrap"), size=21, mode="wrap")  # ~80 m
@@ -139,7 +149,7 @@ def build_track(ses: data.Session, lap: pd.DataFrame, step: float = 4.0) -> dict
                         "i": int(round(sc / ds)) % n, "ax": float(np.cos(a)), "ay": float(np.sin(a))})
     corners.sort(key=lambda c: c["s"])
     return {"length": round(length, 1), "step": ds, "x": rx, "y": ry, "z": z, "raw_x": cx, "raw_y": cy,
-            "corners": corners, "rotation": rot, "circuit": ses.circuit}
+            "corners": corners, "rotation": rot, "circuit": ses.circuit, "gps": gps, "surveyed": surveyed}
 
 
 def lap_on_track(track: dict, lap: pd.DataFrame, sectors: tuple[float, float] | None = None) -> dict:
@@ -174,12 +184,16 @@ def lap_on_track(track: dict, lap: pd.DataFrame, sectors: tuple[float, float] | 
     speed = lin("Speed")
     dt = np.maximum(np.gradient(time), 1e-3)
     g = uniform_filter1d(np.gradient(speed / 3.6) / dt / 9.81, size=9, mode="nearest")
-    lx, ly = rotate(lap["X"].values, lap["Y"].values, track["rotation"])
+    if lap["X"].isna().any():
+        line_x, line_y = np.asarray(track["x"], float), np.asarray(track["y"], float)
+    else:
+        lx, ly = rotate(lap["X"].values, lap["Y"].values, track["rotation"])
+        line_x = uniform_filter1d(np.interp(grid, s_mid, lx), size=3, mode="wrap")
+        line_y = uniform_filter1d(np.interp(grid, s_mid, ly), size=3, mode="wrap")
     out = {
         "time": time, "speed": speed, "gear": stepped("nGear"), "throttle": lin("Throttle"),
         "brake": stepped("Brake"), "rpm": lin("RPM"), "g": np.clip(g, -6.5, 2.5), "lap_time": lap_time,
-        "line_x": uniform_filter1d(np.interp(grid, s_mid, lx), size=3, mode="wrap"),
-        "line_y": uniform_filter1d(np.interp(grid, s_mid, ly), size=3, mode="wrap"),
+        "line_x": line_x, "line_y": line_y,
     }
     if sectors:
         s1, s2 = sectors

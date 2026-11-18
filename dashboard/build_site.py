@@ -86,6 +86,12 @@ def build(out: Path, year: int | None, rounds: list[int] | None, everything: boo
         st = sitedata.styles(data.load_session(year, max(built), "R"))
     print("season")
     season = sitedata.season_payload(year, built, {k: v["color"] for k, v in st.items()})
+    for x in season["rounds"]:  # a circuit with no survey borrows the shape traced for its race page
+        if x["outline"] is None and x["built"]:
+            trk = json.loads((round_dir(out, x["round"]) / "race.json").read_text(encoding="utf-8"))["track"]
+            pick = slice(None, None, max(1, len(trk["x"]) // 180))
+            x["outline"] = {"x": [round(v) for v in trk["x"][pick]], "y": [round(v) for v in trk["y"][pick]],
+                            "km": round(trk["length"] / 1000, 2)}
     for x in season["rounds"]:  # which optional pages exist for each weekend
         x["replay"] = (round_dir(out, x["round"]) / "replay.json").exists()
         x["duel"] = (round_dir(out, x["round"]) / "duel.json").exists()

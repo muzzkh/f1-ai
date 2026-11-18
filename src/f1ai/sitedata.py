@@ -58,7 +58,7 @@ def event_meta(ses: data.Session) -> dict:
 
 def track_payload(trk: dict, sectors=None, pit=None) -> dict:
     out = {"length": trk["length"], "step": round(trk["step"], 4), "x": r(trk["x"]), "y": r(trk["y"]),
-           "z": r(trk["z"]), "sectors": r(sectors or []),
+           "z": r(trk["z"]), "sectors": r(sectors or []), "gps": trk.get("gps", True), "surveyed": trk.get("surveyed", True),
            "corners": [{"label": c["label"], "i": c["i"], "ax": round(c["ax"], 3), "ay": round(c["ay"], 3)}
                        for c in trk["corners"]]}
     if pit:
@@ -290,6 +290,8 @@ def replay_payload(race: data.Session, hz: float = 2.0) -> dict:
                      "last": round(float(min(tt.max(), duration)), 1)})
         ends = laps[laps["Driver"] == code].sort_values("LapNumber")["End"]
         lap_ends[code] = r((ends - t0).dt.total_seconds().dropna().values, 1)
+    if len(cars) < 2:
+        raise ValueError("No position data was recorded for this race.")
 
     flags = [{"kind": k, "from": round(max(0.0, (a - t0).total_seconds()), 1),
               "to": round(min(duration, (b - t0).total_seconds()), 1)}
@@ -303,56 +305,53 @@ def replay_payload(race: data.Session, hz: float = 2.0) -> dict:
                   "lap_ends": lap_ends, "flags": flags, "overtakes": passes})
 
 
-def video_payload(ses: data.Session, driver: str, assets, seconds: float = 30.0, every: int = 5,
-                  cols: int = 8, rows: int = 8, frame_size: tuple[int, int] = (480, 270)) -> dict:
-    """Run the video round trip on a real lap and export it for the video lab:
-    a sheet of frames to flip through, what was read from each, and the truth."""
+def video_payload(ses: data.Session, driver: str, assets, seconds: float = 24.0,
+                  size: tuple[int, int] = (960, 540)) -> dict:
+    """Run the video round trip on a real lap and export it for the video lab.
+
+    The clip is a view from the car of the real circuit with the instrument
+    cluster, written as WebM so browsers can play it. The reader then reads
+    that same file, and its readings are exported next to the telemetry the
+    clip was drawn from.
+    """
     import cv2
 
     from . import video
-    from .config import VIDEO_DIR
-    from .video import cluster, render
+    from .video import cluster, render, scene
 
     lap = an.lap_telemetry(ses, driver)
-    clip = VIDEO_DIR / "site-demo.mp4"
-    info = video.render_onboard(lap, clip, cluster.NAME, max_seconds=seconds,
-                                caption=f"{lap.attrs['driver']}  {ses.event_name} {ses.year}  {ses.name}  lap {lap.attrs['lap_number']}")
+    trk = track.build_track(ses, lap)
+    on = track.lap_on_track(trk, lap, _sectors(ses, lap))
+    st = styles(ses)[lap.attrs["driver"]]
+    assets.mkdir(parents=True, exist_ok=True)
+    clip = assets / "onboard.webm"
+    code, number = lap.attrs["driver"], lap.attrs["lap_number"]
+    info = video.render_onboard(
+        lap, clip, cluster.NAME, max_seconds=seconds, size=size,
+        scene=lambda w, h: scene.TrackScene(trk, on, w, h, st["color"]),
+        caption=f"{code}  {ses.event_name} {ses.year}  {ses.name}  lap {number}")
     read = video.extract_telemetry(clip, cluster.NAME)
     acc = video.accuracy(read, lap)
     truth = render.frame_values(lap, info["fps"], seconds)
-
-    cap = cv2.VideoCapture(str(clip))
-    fw, fh = frame_size
-    sheet = np.zeros((rows * fh, cols * fw, 3), np.uint8)
-    frames, i = [], 0
-    while len(frames) < cols * rows:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if i % every == 0:
-            k = len(frames)
-            sheet[(k // cols) * fh:(k // cols + 1) * fh, (k % cols) * fw:(k % cols + 1) * fw] = cv2.resize(frame, (fw, fh), interpolation=cv2.INTER_AREA)
-            frames.append(i)
-        i += 1
-    cap.release()
-    assets.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(assets / "onboard-frames.jpg"), sheet, [cv2.IMWRITE_JPEG_QUALITY, 72])
+    cv2.imwrite(str(assets / "onboard-poster.jpg"), video.grab_frame(clip, min(6.0, seconds / 2)), [cv2.IMWRITE_JPEG_QUALITY, 82])
 
     def col(df, name, n=0):
         return r(df[name].values, n) if name in df else []
 
-    prof = cluster.profile()
     return clean({
-        "event": event_meta(ses), "session": ses.name, "driver": styles(ses)[lap.attrs["driver"]],
-        "lap": lap.attrs["lap_number"], "lap_time": lap.attrs["lap_time"],
-        "clip": {"fps": info["fps"], "frames": info["frames"], "seconds": info["duration_s"], "size": info["size"]},
-        "sheet": {"src": "assets/onboard-frames.jpg", "cols": cols, "rows": rows, "w": fw, "h": fh, "frames": frames},
-        "regions": prof["elements"], "accuracy": acc,
+        "event": event_meta(ses), "session": ses.name, "driver": st,
+        "lap": number, "lap_time": lap.attrs["lap_time"],
+        "clip": {"src": "assets/onboard.webm", "poster": "assets/onboard-poster.jpg", "fps": info["fps"],
+                 "frames": info["frames"], "seconds": info["duration_s"], "size": info["size"],
+                 "kb": clip.stat().st_size // 1024},
+        "regions": cluster.profile()["elements"], "accuracy": acc, "track": track_payload(trk, on.get("sectors")),
         "t": r(read["Time"].values, 2),
         "read": {"speed": col(read, "Speed"), "gear": col(read, "nGear"), "throttle": col(read, "Throttle"),
-                 "brake": col(read, "Brake"), "rpm": col(read, "RPM")},
+                 "brake": col(read, "Brake"), "rpm": col(read, "RPM"), "distance": col(read, "Distance", 1),
+                 "g": col(read, "LongG", 2)},
         "truth": {"speed": col(truth, "Speed"), "gear": col(truth, "nGear"), "throttle": col(truth, "Throttle"),
                   "brake": col(truth, "Brake"), "rpm": col(truth, "RPM")},
+        "rpm_max": float(np.percentile(lap["RPM"], 99.5)),
     })
 
 

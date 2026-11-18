@@ -357,14 +357,18 @@ def _build_results(raw: dict, drivers: pd.DataFrame, laps: pd.DataFrame, code: s
     info = drivers.set_index("DriverNumber")
     best = laps.groupby("DriverNumber")["LapTime"].min() if len(laps) else pd.Series(dtype=float)
     rows = []
-    res = sorted(raw["session_result"], key=lambda r: (r.get("position") is None, r.get("position") or 99))
+    def place(r):  # positions are numbers, but unclassified cars can carry text such as "NC"
+        p = r.get("position")
+        return int(p) if isinstance(p, (int, float)) or (isinstance(p, str) and p.isdigit()) else None
+
+    res = sorted(raw["session_result"], key=lambda r: (place(r) is None, place(r) or 99))
     grid = {g["driver_number"]: g["position"] for g in raw.get("starting_grid", [])}
     for r in res:
         n = r["driver_number"]
         if n not in info.index:
             continue
         row = {
-            "Pos": r.get("position"),
+            "Pos": place(r),
             "Driver": info.at[n, "Driver"],
             "Name": info.at[n, "FullName"],
             "Team": info.at[n, "Team"],
