@@ -40,13 +40,16 @@ def _render(args) -> int:
     if args.synthetic:
         from .synth import synthetic_lap
 
-        tel, name = synthetic_lap(), f"synthetic-{args.profile}.mp4"
+        tel, name, view = synthetic_lap(), f"synthetic-{args.profile}.mp4", None
     else:
+        from .video import scene
+
         ses = data.load_session(args.year, args.event, args.session)
         tel = an.lap_telemetry(ses, args.driver, args.lap)
         name = f"{ses.year}-r{ses.round:02d}-{ses.code}-{tel.attrs['driver']}-lap{tel.attrs['lap_number']}-{args.profile}.mp4"
+        view = scene.for_lap(ses, tel)
     out = args.out or str(VIDEO_DIR / name)
-    print(json.dumps(render.render_onboard(tel, out, args.profile, max_seconds=args.seconds), indent=2))
+    print(json.dumps(render.render_onboard(tel, out, args.profile, max_seconds=args.seconds, scene=view), indent=2))
     return 0
 
 
@@ -90,14 +93,14 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--driver")
     v.add_argument("--lap", type=int)
     v.add_argument("--synthetic", action="store_true", help="use an invented lap (works offline)")
-    v.add_argument("--profile", default="demo-halo")
+    v.add_argument("--profile", default="cluster")
     v.add_argument("--seconds", type=float, help="only render the first N seconds")
     v.add_argument("--out")
     v.set_defaults(fn=_render)
 
     e = sub.add_parser("extract", help="read telemetry out of a video")
     e.add_argument("video")
-    e.add_argument("--profile", default="demo-halo")
+    e.add_argument("--profile", default="cluster")
     e.add_argument("--start", type=float, default=0.0)
     e.add_argument("--end", type=float)
     e.add_argument("--out")

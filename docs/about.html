@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · F1 AI</title>
+<meta name="description" content="What F1 AI is: open race analysis, an MCP server that gives AI assistants real timing data, and a video-to-telemetry reader.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0b0d%22/><path d=%22M7 20l4-8h14l-4 8z%22 fill=%22%23a26bff%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav" id="nav"></header>
+<main>
+  <section class="hero hero--plain">
+    <div class="wrap">
+      <p class="eyebrow t-label"><span>Open source</span><span>No API keys</span><span>Runs on your machine</span></p>
+      <h1 class="t-display">About<br><em>the project</em></h1>
+      <p class="lede">F1 AI turns open Formula 1 timing data into race analysis you can look at, gives AI assistants the same data through an MCP server, and reads telemetry off onboard video. This website is a snapshot; the full project works for any session since 2023.</p>
+      <div class="btns"><a class="btn btn--primary" id="repo" href="#">View the source</a><a class="btn" href="index.html">Latest race</a></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Four parts</h2><p>All built on one data layer and one set of analysis functions, so a number here, in the dashboard and in an AI answer is the same number.</p></header>
+      <div class="steps">
+        <article><b class="t-num">01</b><h3>Analysis</h3><p>Clean-lap pace, a fuel-corrected tyre model, measured pit loss, strategy ranking, and laps aligned by GPS so two drivers can be compared point for point.</p></article>
+        <article><b class="t-num">02</b><h3>Dashboard</h3><p>A local app for exploring any session: race, pace and tyres, telemetry, video lab, championship.</p></article>
+        <article><b class="t-num">03</b><h3>MCP server</h3><p>Tools an AI assistant such as Claude can call to answer questions from real timing data instead of guessing.</p></article>
+        <article><b class="t-num">04</b><h3>Video to telemetry</h3><p>Reads the on-screen cluster of an onboard video into a telemetry file, with a renderer that makes test footage to measure accuracy against.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">MCP tools</h2><p>What an assistant can ask for once the server is connected.</p></header>
+      <div class="tools" id="tools"></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Run it</h2><p>Python 3.10 or newer. The first session you open is downloaded and cached; after that it loads from disk.</p></header>
+      <pre class="codeblock" id="run"></pre>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">What is real</h2><p>Better graphics should not overstate what the data can support.</p></header>
+      <div class="steps steps--3">
+        <article><h3>Real</h3><p>Circuit shape, elevation, corner numbers, the pit lane path, every lap time, tyre stint, position and overtake, and where each car was on track.</p></article>
+        <article><h3>Approximate</h3><p>Car telemetry arrives about four times a second. Sector-level gaps match official timing to a few hundredths; single-corner numbers and racing lines are indicative. Circuit length is measured along a driven line, about 2% short of the official figure.</p></article>
+        <article><h3>Stylised or modelled</h3><p>Track width and kerbs are drawn, not measured. The strategy model assumes linear tyre wear, clear air and no safety cars. The video reader is verified only on footage this project renders.</p></article>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="foot"></footer>
+<script type="module" src="js/about.js"></script>
+</body>
+</html>

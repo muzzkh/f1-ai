@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video lab · F1 AI</title>
+<meta name="description" content="Reading speed, gear, throttle, brake and revs straight off the pixels of an onboard video, and checking the result against the real telemetry.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0b0d%22/><path d=%22M7 20l4-8h14l-4 8z%22 fill=%22%23a26bff%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700;1,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav" id="nav"></header>
+<main>
+  <section class="hero hero--plain">
+    <div class="wrap">
+      <p class="eyebrow t-label" id="eyebrow"></p>
+      <h1 class="t-display">Video to<br><em>telemetry</em></h1>
+      <p class="lede">The reader watches a video frame by frame and recovers speed, gear, throttle, brake and revs from the on-screen cluster alone. The clip is generated from a real lap on the real circuit, so every reading can be checked against the truth.</p>
+    </div>
+  </section>
+
+  <section class="band band--tight">
+    <div class="wrap">
+      <div class="lab">
+        <div class="lab__view">
+          <div class="lab__frame">
+            <video id="clip" muted loop playsinline preload="auto" aria-label="A lap of the real circuit seen from the car, with the instrument cluster"></video>
+            <svg id="regions" aria-hidden="true"></svg>
+          </div>
+          <div class="lab__bar">
+            <button class="play" id="play" type="button" aria-label="Pause"><svg viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M2 1h3.5v12H2zM8.5 1H12v12H8.5z"/></svg></button>
+            <label class="check"><input type="checkbox" id="showRegions" checked> Show where the reader looks</label>
+            <b class="t-num" id="clock">0.00 s</b>
+          </div>
+          <p class="note">The road is the real circuit: true corner shapes, order and elevation, driven at the real speed. Track width, kerbs, scenery and the car are stylised. It is generated, not footage.</p>
+        </div>
+        <div class="lab__read">
+          <h3 class="t-label">Rebuilt from the pixels alone</h3>
+          <div class="lab__rebuilt">
+            <div class="cluster" id="cluster"></div>
+            <svg class="track" id="map" role="img" aria-label="The car placed on the circuit using only the speed read from the video"></svg>
+          </div>
+          <p class="note">This cluster and the dot on the circuit are driven only by what the reader recovered from the video. The position comes from adding up the speed it read, frame by frame.</p>
+        </div>
+      </div>
+      <div class="cells" id="cells"></div>
+      <div id="readTrace"></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Accuracy</h2>
+        <p>Measured over the whole clip against the telemetry it was generated from, after video compression (VP8).</p></header>
+      <div class="tiles" id="tiles"></div>
+      <p class="quiet">This is measured on footage the project renders itself. Real broadcast video uses a different on-screen design, so it needs its own layout profile, calibrated in the dashboard. That has not been tested yet.</p>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">How it reads</h2><p>Four steps, all running on an ordinary laptop.</p></header>
+      <div class="steps">
+        <article><b class="t-num">01</b><h3>Know where to look</h3><p>A layout profile gives the position of every graphic as a fraction of the frame, so the same profile works at any resolution.</p></article>
+        <article><b class="t-num">02</b><h3>Read the numerals</h3><p>A small neural network, trained on digits rendered from the fonts on this machine with blur, noise and slant added, reads speed and gear.</p></article>
+        <article><b class="t-num">03</b><h3>Measure the gauges</h3><p>Throttle, brake and revs are read by how far the colour of each gauge extends around its arc.</p></article>
+        <article><b class="t-num">04</b><h3>Reject the impossible</h3><p>A car cannot change speed by 80 km/h between two frames. Readings that imply it are thrown out and filled from their neighbours.</p></article>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="foot"></footer>
+<script type="module" src="js/video.js"></script>
+</body>
+</html>

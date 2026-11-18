@@ -197,22 +197,25 @@ def list_hud_profiles() -> dict:
 
 @tool
 def render_onboard_video(year: int, event: str, driver: str, session: str = "Q", lap: int | None = None,
-                         profile: str = "demo-halo", max_seconds: float | None = None) -> dict:
-    """Render a lap's real telemetry as an onboard-style video with a HUD
-    overlay (speed, gear, throttle, brake, RPM). Useful as test footage with
-    known ground truth for video_to_telemetry. Returns the file path."""
-    from .video import render
+                         profile: str = "cluster", max_seconds: float | None = None) -> dict:
+    """Render a lap from its real telemetry as a view from the car around the
+    real circuit (true corners and elevation; width, kerbs and scenery are
+    stylised) with an instrument cluster showing speed, gear, throttle, brake
+    and revs. Useful as test footage with known ground truth for
+    video_to_telemetry. Returns the file path."""
+    from .video import render, scene
 
     ses = _session(year, event, session)
     tel = an.lap_telemetry(ses, driver, lap)
     name = f"{ses.year}-r{ses.round:02d}-{ses.code}-{tel.attrs['driver']}-lap{tel.attrs['lap_number']}-{profile}.mp4"
     caption = f"{tel.attrs['driver']}  {ses.event_name} {ses.year}  {ses.name}  lap {tel.attrs['lap_number']}"
-    info = render.render_onboard(tel, VIDEO_DIR / name, profile, max_seconds=max_seconds, caption=caption)
+    info = render.render_onboard(tel, VIDEO_DIR / name, profile, max_seconds=max_seconds, caption=caption,
+                                 scene=scene.for_lap(ses, tel))
     return {**_header(ses), "driver": tel.attrs["driver"], "lap": tel.attrs["lap_number"], **info}
 
 
 @tool
-def video_to_telemetry(video_path: str, profile: str = "demo-halo", start_s: float = 0.0,
+def video_to_telemetry(video_path: str, profile: str = "cluster", start_s: float = 0.0,
                        end_s: float | None = None, reference_year: int | None = None,
                        reference_event: str | None = None, reference_session: str = "Q",
                        reference_driver: str | None = None, reference_lap: int | None = None) -> dict:

@@ -32,7 +32,7 @@ f1ai-mcp = "f1ai.mcp_server:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-f1ai = ["video/profiles/*.json"]
+f1ai = ["video/profiles/*.json", "video/cluster.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

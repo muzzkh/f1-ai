@@ -4,13 +4,23 @@
     {
       "name": "f1ai-dashboard",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "streamlit", "run", "dashboard/app.py", "--server.port", "8501"],
+      "runtimeArgs": [
+        "-m",
+        "streamlit",
+        "run",
+        "dashboard/app.py",
+        "--server.port",
+        "8501"
+      ],
       "port": 8501
     },
     {
       "name": "f1ai-site",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "http.server", "8600", "--directory", "docs"],
+      "runtimeArgs": [
+        "dashboard/serve_site.py",
+        "8600"
+      ],
       "port": 8600
     }
   ]
