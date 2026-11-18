@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Season · F1 AI</title>
+<meta name="description" content="The Formula 1 season at a glance: every circuit drawn from real data, the championship as it unfolded, and points by round.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0b0d%22/><path d=%22M7 20l4-8h14l-4 8z%22 fill=%22%23a26bff%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav" id="nav"></header>
+<main>
+  <section class="hero hero--plain">
+    <div class="wrap">
+      <p class="eyebrow t-label" id="eyebrow"></p>
+      <h1 class="t-display" id="title"></h1>
+      <div class="tiles" id="tiles"></div>
+    </div>
+  </section>
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Calendar</h2>
+        <p>Every circuit, drawn from its surveyed outline at the same line weight (not the same scale). Open a finished weekend to see the race.</p></header>
+      <div class="calendar" id="calendar"></div>
+    </div>
+  </section>
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Championship</h2>
+        <p>Points after each round. Hover a line or a driver to follow them; click a driver to keep them highlighted. Dashed lines are the lower-placed driver of a team.</p></header>
+      <div class="chips" id="chips"></div>
+      <div id="progress"></div>
+    </div>
+  </section>
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Points by round</h2>
+        <p>What each driver scored at each weekend, sprint included. Brighter cells are bigger hauls.</p></header>
+      <div class="scroll" id="grid"></div>
+    </div>
+  </section>
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Constructors</h2><p>Team totals so far.</p></header>
+      <div id="teams"></div>
+    </div>
+  </section>
+</main>
+<footer id="foot"></footer>
+<script type="module" src="js/season.js"></script>
+</body>
+</html>

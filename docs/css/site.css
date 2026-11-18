@@ -281,3 +281,33 @@ svg.chart { display: block; overflow: visible; touch-action: pan-y; }
   .replay__bar { grid-template-columns: auto auto auto; }
   .replay__line { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ---------- season ---------- */
+.hero--plain { padding: 36px 0 8px; }
+.hero--plain h1 { margin-bottom: 26px; }
+.hero--plain .tiles b { font-size: 1.3rem; }
+.calendar { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 12px; }
+.round-card { display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 14px 16px; min-width: 0; transition: border-color var(--fast) var(--ease), transform var(--fast) var(--ease); }
+.round-card header { display: flex; justify-content: space-between; align-items: baseline; }
+.round-card header .t-num { font-weight: 700; color: var(--ink-2); }
+.round-card svg { display: block; width: 100%; height: auto; margin: 6px 0 2px; }
+.round-card svg path { fill: none; stroke: var(--paper); stroke-width: 2.4; stroke-linejoin: round; transition: stroke var(--fast) var(--ease); }
+.round-card h3 { margin: 0; font-size: 1rem; font-weight: 800; font-stretch: 112%; text-transform: uppercase; letter-spacing: -.01em; }
+.round-card p { margin: 0; color: var(--muted); font-size: .8rem; }
+.round-card footer { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-size: .82rem; color: var(--ink-2); min-width: 0; }
+.round-card footer i { width: 3px; height: 14px; background: var(--team); flex: none; }
+.round-card footer b { font: italic 800 .82rem var(--font); font-stretch: 112%; color: var(--paper); }
+.round-card footer span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.round-card.is-built:hover { border-color: var(--purple); transform: translateY(-2px); }
+.round-card.is-built:hover svg path { stroke: var(--purple); }
+.round-card.is-future { opacity: .55; }
+.round-card.is-future svg path { stroke: var(--muted); stroke-dasharray: 3 4; }
+
+.scroll { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--radius); }
+.heat { border-collapse: separate; border-spacing: 2px; font: 600 .74rem var(--mono); width: 100%; min-width: 760px; padding: 8px; }
+.heat th { font-weight: 600; color: var(--muted); padding: 4px 6px; text-align: center; }
+.heat tbody th { text-align: left; white-space: nowrap; font: italic 800 .78rem var(--font); font-stretch: 112%; color: var(--ink-2); position: sticky; left: 0; background: var(--carbon); }
+.heat tbody th i { display: inline-block; width: 3px; height: 12px; background: var(--team); margin-right: 7px; vertical-align: -1px; }
+.heat td { text-align: center; height: 26px; min-width: 28px; border-radius: 2px; background: var(--surface); }
+.heat td.sum { background: none; color: var(--paper); text-align: right; padding-left: 10px; }
+.heat tr.is-dim { opacity: .3; }

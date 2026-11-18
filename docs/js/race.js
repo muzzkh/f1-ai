@@ -82,7 +82,7 @@ const setView = (view) => {
     relief = elevation($("track3d"), T, LAYERS[setLayer.current].colour);
     $("note3d").textContent = `Drag to turn. ${relief.rise.toFixed(0)} m separates the lowest and highest points; heights are drawn ${relief.exaggeration}× taller than true scale so they can be seen.`;
   }
-  svg.hidden = three; $("track3d").hidden = !three; $("note3d").hidden = !three;
+  svg.toggleAttribute("hidden", three); $("track3d").hidden = !three; $("note3d").hidden = !three;
   three ? relief.start() : relief?.stop();
   document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === view));
 };
@@ -171,7 +171,7 @@ trace.setAttribute("aria-valuemin", 0); trace.setAttribute("aria-valuemax", 100)
 setPlaying(playing);
 render();
 requestAnimationFrame(frame);
-if (params.get("view") === "3d") { setView("3d"); relief.draw(); }
+if (params.get("view") === "3d") { setView("3d"); render(); relief.draw(); }
 
 // ---------- classification ----------
 const top = R.slice(0, 10), maxGap = Math.max(...top.map((d) => d.gap ?? 0)) || 1;
