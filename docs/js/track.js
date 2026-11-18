@@ -23,7 +23,7 @@ export const ramp = (t) => mix(SPEED_RAMP, t);
 export const PEDAL = { throttle: "#35d07f", brake: "#ff4d5a", coast: "#8a8f9b" };
 
 export class Track {
-  constructor(svg, track, { width = 1000, pad = 78 } = {}) {
+  constructor(svg, track, { width = 1000, pad = 78, data = true } = {}) {
     this.svg = svg;
     this.n = track.x.length;
     this.length = track.length;
@@ -42,7 +42,7 @@ export class Track {
     this._base();
     this._kerbs();
     this.dataLayer = el("g", { class: "fade" }, svg);
-    this.segs = this.pts.map((p, i) => {
+    this.segs = !data ? [] : this.pts.map((p, i) => {
       const q = this.pts[(i + 1) % this.n];
       return el("line", { x1: p[0].toFixed(1), y1: p[1].toFixed(1), x2: q[0].toFixed(1), y2: q[1].toFixed(1),
         "stroke-width": (this.tw * 0.62).toFixed(1), "stroke-linecap": "round" }, this.dataLayer);

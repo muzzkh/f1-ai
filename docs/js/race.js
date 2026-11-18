@@ -3,6 +3,7 @@
 import { $, esc, el, lapTime, reduced, params, context, shell, load, COMPOUND, compoundName } from "./lib.js";
 import { Track, ramp, PEDAL } from "./track.js";
 import { cluster } from "./cluster.js";
+import { elevation } from "./track3d.js";
 import { storyChart, driverChips, stintRibbons, compoundLegend, paceStrips, bars } from "./charts.js";
 
 const ctx = await context();
@@ -63,14 +64,29 @@ const LAYERS = {
       .map(([k, c]) => `<span class="sw"><i style="background:${c}"></i>${k}</span>`).join(""),
   },
 };
+let relief = null; // the elevation view, created the first time it is opened
 const setLayer = (name) => {
   track.colour(LAYERS[name].colour);
+  relief?.setColour(LAYERS[name].colour);
+  setLayer.current = name;
   $("legend").innerHTML = LAYERS[name].legend;
   document.querySelectorAll("[data-layer]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.layer === name));
 };
 document.querySelectorAll("[data-layer]").forEach((b) => b.addEventListener("click", () => setLayer(b.dataset.layer)));
 setLayer("speed");
 const moveCar = track.car(L.color);
+
+const setView = (view) => {
+  const three = view === "3d";
+  if (three && !relief) {
+    relief = elevation($("track3d"), T, LAYERS[setLayer.current].colour);
+    $("note3d").textContent = `Drag to turn. ${relief.rise.toFixed(0)} m separates the lowest and highest points; heights are drawn ${relief.exaggeration}× taller than true scale so they can be seen.`;
+  }
+  svg.hidden = three; $("track3d").hidden = !three; $("note3d").hidden = !three;
+  three ? relief.start() : relief?.stop();
+  document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === view));
+};
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
 
 // ---------- instrument deck ----------
 $("lapHud").style.setProperty("--team", L.color);
@@ -112,6 +128,7 @@ let t = pinned ? Math.min(L.time, Math.max(0, startAt)) : 0, playing = !reduced 
 function render() {
   const fi = indexAt(t), i = Math.min(track.n - 1, Math.floor(fi));
   moveCar(fi);
+  relief?.setCar(fi, L.color);
   update({ speed: interp(fi, L.speed), gear: L.gear[i], throttle: interp(fi, L.throttle), brake: L.brake[i], rpm: interp(fi, L.rpm), g: interp(fi, L.g) });
   $("timer").textContent = `${Math.floor(t / 60)}:${(t % 60).toFixed(3).padStart(6, "0")}`;
   const x = tx(fi); head.setAttribute("x1", x); head.setAttribute("x2", x);
@@ -154,6 +171,7 @@ trace.setAttribute("aria-valuemin", 0); trace.setAttribute("aria-valuemax", 100)
 setPlaying(playing);
 render();
 requestAnimationFrame(frame);
+if (params.get("view") === "3d") { setView("3d"); relief.draw(); }
 
 // ---------- classification ----------
 const top = R.slice(0, 10), maxGap = Math.max(...top.map((d) => d.gap ?? 0)) || 1;

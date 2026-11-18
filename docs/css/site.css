@@ -54,6 +54,9 @@ h1 em { font-style: normal; color: var(--muted); }
 /* ---------- stage: circuit + overlays ---------- */
 .stage { position: relative; min-width: 0; }
 .stage svg.track { display: block; width: 100%; height: auto; overflow: visible; }
+.stage svg.track[hidden], .track3d[hidden] { display: none; }
+.track3d canvas { display: block; }
+.stage .note { margin-top: 0; }
 .stage__lap .who { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
 .stage__lap .who i { width: 4px; height: 14px; background: var(--team); }
 .timer { font-size: clamp(1.8rem, 3.2vw, 2.7rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
@@ -248,4 +251,33 @@ svg.chart { display: block; overflow: visible; touch-action: pan-y; }
   .duel .stage { grid-column: 1 / -1; grid-row: 1; }
   .deck--duel { gap: 18px; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); }
   .live b { font-size: 1.15rem; }
+}
+
+/* ---------- race replay ---------- */
+.replay__grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--gutter); align-items: start; }
+.replay__map { position: relative; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 8px; min-width: 0; }
+.replay__map svg { display: block; width: 100%; height: auto; }
+.replay__badge { position: absolute; top: 16px; left: 18px; display: grid; gap: 2px; }
+.replay__badge b { font-size: 1.5rem; line-height: 1; }
+.replay__badge span { color: var(--throttle); font-size: .8rem; font-weight: 600; font-stretch: 75%; letter-spacing: .14em; text-transform: uppercase; }
+.replay__badge span.is-neutral { color: var(--paper); }
+.car-tag { font: italic 800 13px var(--font); font-stretch: 112%; fill: var(--paper); text-anchor: middle; paint-order: stroke; stroke: #0a0b0d; stroke-width: 3px; }
+.tower { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); overflow: hidden; }
+.tower__head { display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--hairline); }
+.tower ol { list-style: none; margin: 0; padding: 0; }
+.tower li { display: grid; grid-template-columns: 1.6em 3px 3.2em minmax(0, 1fr) 18px; gap: 8px; align-items: center; padding: 4px 12px; font-size: .8rem; border-bottom: 1px solid rgba(42, 46, 55, .5); cursor: pointer; }
+.tower li:hover { background: var(--raised); }
+.tower li i { height: 14px; background: var(--team); }
+.tower li b { font: italic 800 .8rem var(--font); font-stretch: 112%; }
+.tower li .gap { text-align: right; color: var(--ink-2); }
+.tower li em { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 700 .62rem var(--font); color: #0a0b0d; font-style: normal; }
+.tower li.is-out { opacity: .4; }
+.replay__bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 18px; align-items: center; margin-top: 16px; }
+.replay__clock { font-size: 1.1rem; }
+.replay__line svg { cursor: ew-resize; touch-action: none; }
+@media (max-width: 900px) {
+  .replay__grid { grid-template-columns: minmax(0, 1fr); }
+  .tower ol { display: grid; grid-template-columns: 1fr 1fr; }
+  .replay__bar { grid-template-columns: auto auto auto; }
+  .replay__line { grid-column: 1 / -1; grid-row: 2; }
 }

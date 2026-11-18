@@ -33,9 +33,15 @@
               <button type="button" data-layer="gear" aria-pressed="false">Gear</button>
               <button type="button" data-layer="pedals" aria-pressed="false">Pedals</button>
             </div>
+            <div class="seg" role="group" aria-label="View">
+              <button type="button" data-view="map" aria-pressed="true">Map</button>
+              <button type="button" data-view="3d" aria-pressed="false">Elevation</button>
+            </div>
             <div class="legend" id="legend"></div>
           </div>
           <svg class="track" id="track" role="img"></svg>
+          <div class="track3d" id="track3d" hidden></div>
+          <p class="note" id="note3d" hidden></p>
         </div>
       </div>
       <div class="deck">
