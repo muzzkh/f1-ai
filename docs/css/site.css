@@ -329,7 +329,7 @@ svg.chart { display: block; overflow: visible; touch-action: pan-y; }
 .tools article { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); min-width: 0; }
 .tools h3 { margin: 0 0 6px; font-size: .88rem; color: var(--purple); font-weight: 700; overflow-wrap: anywhere; }
 .tools p { margin: 0; color: var(--ink-2); font-size: .86rem; }
-.code { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; font: .84rem/1.7 var(--mono); color: var(--ink-2); margin: 0; }
+.codeblock { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; font: .84rem/1.7 var(--mono); color: var(--ink-2); margin: 0; }
 
 /* ---------- video lab ---------- */
 .lab { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--gutter); align-items: start; margin-bottom: 22px; }
@@ -350,3 +350,9 @@ svg.chart { display: block; overflow: visible; touch-action: pan-y; }
 .readout .is-ok { color: var(--throttle); }
 .readout .is-off { color: var(--brake); }
 @media (max-width: 900px) { .lab { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) {
+  .corners { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .corner { padding: 10px 10px 8px; }
+  .corner header b { font-size: 1.15rem; }
+  .corner header span, .corner dl div { font-size: .72rem; }
+}

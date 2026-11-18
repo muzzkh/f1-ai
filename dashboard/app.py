@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import charts  # noqa: E402
 from f1ai import analysis as an  # noqa: E402
-from f1ai import data, video  # noqa: E402
+from f1ai import data, track, video  # noqa: E402
 from f1ai.config import ROOT, TELEMETRY_DIR, VIDEO_DIR  # noqa: E402
 from f1ai.video import layout as hud_layout  # noqa: E402
 from f1ai.video import render as hud_render  # noqa: E402
@@ -28,7 +28,11 @@ st.markdown(
     """
     <style>
       .block-container {padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1500px;}
-      [data-testid="stMetric"] {background: #232321; border: 1px solid #30302d; border-radius: 10px; padding: 12px 16px;}
+      @import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=JetBrains+Mono:wght@400..800&display=swap");
+      html, body, [class*="css"] {font-family: "Archivo", "Segoe UI", system-ui, sans-serif;}
+      h1 {font-stretch: 125%; font-weight: 800; text-transform: uppercase; letter-spacing: -0.02em;}
+      [data-testid="stMetricValue"] {font-family: "JetBrains Mono", ui-monospace, monospace;}
+      [data-testid="stMetric"] {background: #121418; border: 1px solid #2a2e37; border-radius: 4px; padding: 12px 16px;}
       [data-testid="stMetricLabel"] p {color: #c3c2b7; font-size: 0.8rem;}
       [data-testid="stMetricValue"] {font-size: 1.5rem;}
       h1 {font-size: 1.7rem !important; margin-bottom: 0;}
@@ -253,7 +257,11 @@ def view_telemetry() -> None:
     plot(charts.telemetry_compare(cmp))
     left, right = st.columns([1.1, 1])
     with left:
-        plot(charts.track_map(cmp))
+        try:  # the real circuit from the track engine; fall back to the raw GPS trace
+            trk = track.build_track(ses, an.lap_telemetry(ses, a, lap_a))
+            plot(charts.circuit_map(trk, cmp))
+        except (track.TrackError, data.DataError):
+            plot(charts.track_map(cmp))
     with right:
         st.markdown("**Corner by corner**")
         if len(cmp["corners"]):
@@ -281,7 +289,7 @@ def view_video() -> None:
         c = st.columns([1, 1, 1, 1])
         drv = c[0].selectbox("Driver", drivers, key="v_drv")
         lap = c[1].selectbox("Lap", lap_options(drv), format_func=lap_label(drv), key="v_lap")
-        prof = c[2].selectbox("HUD style", sorted((p for p in profiles if p.startswith("demo-")), reverse=True), key="v_prof")
+        prof = c[2].selectbox("HUD style", ["cluster"] + sorted((p for p in profiles if p.startswith("demo-")), reverse=True), key="v_prof")
         secs = c[3].slider("Clip length (s)", 10, 120, 30, step=5)
         if st.button("Render video", type="primary"):
             try:

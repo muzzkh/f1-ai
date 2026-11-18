@@ -53,3 +53,21 @@ def test_track_geometry_is_a_closed_lap(race):
     assert (np.diff(on["time"]) >= 0).all()
     assert on["time"][-1] == pytest.approx(on["lap_time"], abs=0.3)
     assert 0 < on["sectors"][0] < on["sectors"][1] < trk["length"]
+
+
+def test_website_payloads(race):
+    from f1ai import sitedata
+
+    p = sitedata.race_payload(race)
+    n = len(p["track"]["x"])
+    assert len(p["track"]["z"]) == n and len(p["lap"]["speed"]) == n
+    assert p["event"]["laps"] == 58 and p["results"][0]["code"] == "VER"
+    assert len(p["story"]["series"]) == 20 and len(p["story"]["series"][0]["pos"]) == 58
+    assert p["story"]["series"][0]["gap"][-1] == 0            # the winner leads at the flag
+    assert p["strategy"]["available"] and p["strategy"]["options"][0]["gap_to_best_s"] == 0
+    assert {s["compound"] for row in p["stints"] for s in row["stints"]} >= {"MEDIUM", "HARD"}
+
+    d = sitedata.duel_payload(data.load_session(2025, "Abu Dhabi", "Q"))
+    assert d["delta"][-1] == pytest.approx(d["gap"], abs=0.002)   # pinned to the official gap
+    assert len(d["a"]["line_x"]) == len(d["track"]["x"]) and len(d["minis"]) == 25
+    assert sum(m["gain_a"] for m in d["minis"]) == pytest.approx(d["gap"] - d["delta"][0], abs=0.01)

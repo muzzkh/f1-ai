@@ -9,16 +9,18 @@ from plotly.subplots import make_subplots
 
 from f1ai import analysis as an
 
-SURFACE = "#1a1a19"
-PANEL = "#232321"
-GRID = "#30302d"
-TEXT = "#f0efec"
-TEXT_2 = "#c3c2b7"
-MUTED = "#8a897f"
+# Colours follow the website's design tokens (docs/css/tokens.css, design/brief.md).
+SURFACE = "#0a0b0d"
+PANEL = "#1a1d23"
+GRID = "#2a2e37"
+TEXT = "#f4f1ea"
+TEXT_2 = "#b8b4aa"
+MUTED = "#7c7a73"
+ASPHALT = "#262a32"
 SERIES_A = "#3987e5"   # categorical slot 1 (dark step)
 SERIES_B = "#d95926"   # categorical slot 2 (dark step)
-COMPOUND = {"SOFT": "#e8002d", "MEDIUM": "#f5c400", "HARD": "#e6e6e3",
-            "INTERMEDIATE": "#2fb344", "WET": "#3987e5", "UNKNOWN": "#77766e"}
+COMPOUND = {"SOFT": "#f0384a", "MEDIUM": "#f5c400", "HARD": "#ebe9e3",
+            "INTERMEDIATE": "#3fbf5a", "WET": "#3987e5", "UNKNOWN": "#6b6e76"}
 COMPOUND_ORDER = ["SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET", "UNKNOWN"]
 CONFIG = {"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d", "autoScale2d"]}
 
@@ -26,7 +28,7 @@ CONFIG = {"displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"
 def _base(fig: go.Figure, height: int, title: str | None = None) -> go.Figure:
     fig.update_layout(
         height=height, paper_bgcolor=SURFACE, plot_bgcolor=SURFACE,
-        font=dict(color=TEXT_2, size=12, family="Inter, Segoe UI, system-ui, sans-serif"),
+        font=dict(color=TEXT_2, size=12, family="Archivo, Segoe UI, system-ui, sans-serif"),
         title=dict(text=title, font=dict(color=TEXT, size=15), x=0, xanchor="left") if title else None,
         margin=dict(l=8, r=16, t=44 if title else 16, b=8),
         hoverlabel=dict(bgcolor=PANEL, bordercolor=GRID, font=dict(color=TEXT, size=12)),
@@ -239,6 +241,40 @@ def telemetry_compare(cmp: dict) -> go.Figure:
     fig.update_yaxes(dtick=2, row=5, col=1)
     fig.update_xaxes(title="Distance (m)", row=5, col=1)
     fig.update_xaxes(showspikes=True, spikecolor=MUTED, spikethickness=1, spikemode="across", spikedash="solid")
+    return fig
+
+
+def circuit_map(trk: dict, cmp: dict) -> go.Figure:
+    """Who is faster where, drawn on the real circuit from the track engine
+    (surveyed outline, official corner numbers). Width is stylised."""
+    a, b = cmp["driver_a"], cmp["driver_b"]
+    same = a == b
+    la = f"lap {cmp['summary_a']['lap_number']}" if same else a
+    lb = f"lap {cmp['summary_b']['lap_number']}" if same else b
+    x, y, n = np.append(trk["x"], trk["x"][0]), np.append(trk["y"], trk["y"][0]), len(trk["x"])
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line=dict(color=ASPHALT, width=16), hoverinfo="skip", showlegend=False))
+    span = float(cmp["frame"]["Distance"].iloc[-1])
+    shown = set()
+    for m in cmp["mini_sectors"].itertuples():
+        i0 = int(m.Start / span * n)
+        i1 = min(n, int(np.ceil(m.End / span * n)) + 1)
+        who, col = (la, SERIES_A) if m.Gain_A > 0 else (lb, SERIES_B)
+        fig.add_trace(go.Scatter(
+            x=x[i0:i1 + 1], y=y[i0:i1 + 1], mode="lines", line=dict(color=col, width=6), name=f"{who} faster",
+            legendgroup=who, showlegend=who not in shown,
+            hovertemplate=f"<b>{who}</b> faster by {abs(m.Gain_A):.3f} s<extra></extra>"))
+        shown.add(who)
+    crn = trk["corners"]
+    if crn:
+        off = 0.035 * max(np.ptp(trk["x"]), np.ptp(trk["y"]))
+        fig.add_trace(go.Scatter(
+            x=[trk["x"][c["i"]] + c["ax"] * off for c in crn], y=[trk["y"][c["i"]] + c["ay"] * off for c in crn],
+            mode="text", text=[c["label"] for c in crn], textfont=dict(color=MUTED, size=11), hoverinfo="skip", showlegend=False))
+    _base(fig, 460, "Where each is faster")
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False, scaleanchor="x", scaleratio=1)
+    fig.update_layout(legend=dict(orientation="h", y=-0.02, yanchor="top", x=0.5, xanchor="center"))
     return fig
 
 
