@@ -1,7 +1,7 @@
 // Instrument cluster: speed, gear, throttle, brake, shift lights and longitudinal g.
 // Only channels that exist in the data are shown (no DRS from 2026, no energy store).
 
-import { el } from "./track.js";
+import { el } from "./lib.js";
 
 const C = 120, R = 96;
 const pt = (deg, r = R) => [C + r * Math.cos((deg * Math.PI) / 180), C + r * Math.sin((deg * Math.PI) / 180)];

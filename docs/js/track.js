@@ -1,12 +1,7 @@
 // Circuit renderer: draws real track geometry as an SVG and colours a lap along it.
 
-const NS = "http://www.w3.org/2000/svg";
-export const el = (name, attrs = {}, parent) => {
-  const node = document.createElementNS(NS, name);
-  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
-  if (parent) parent.appendChild(node);
-  return node;
-};
+import { el } from "./lib.js";
+export { el };
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
@@ -38,6 +33,7 @@ export class Track {
     this.scale = (width - 2 * pad) / (maxX - minX);
     this.h = (maxY - minY) * this.scale + 2 * pad;
     this.w = width;
+    this.project = (x, y) => [(x - minX) * this.scale + pad, (-y - minY) * this.scale + pad];
     this.pts = xs.map((x, i) => [(x - minX) * this.scale + pad, (ys[i] - minY) * this.scale + pad]);
     // Real width is not in any data source: a stylised constant, never thinner than 14 units.
     this.tw = Math.max(14, 15 * this.scale);
@@ -113,6 +109,16 @@ export class Track {
       const t = el("text", { class: "trk-corner", x: p[0] + c.ax * off, y: p[1] - c.ay * off }, this.marks);
       t.textContent = c.label;
     }
+  }
+
+  /** The pit lane as traced by a car that stopped (display coordinates in metres). */
+  pitLane(pit, project) {
+    if (!pit) return;
+    const d = "M" + pit.x.map((x, i) => project(x, pit.y[i]).map((v) => v.toFixed(1)).join(" ")).join("L");
+    const g = el("g", { class: "fade" }, this.svg);
+    this.svg.insertBefore(g, this.dataLayer);
+    el("path", { d, fill: "none", stroke: "#3a3f4a", "stroke-width": this.tw * 0.55, "stroke-linecap": "round", "stroke-linejoin": "round" }, g);
+    el("path", { d, fill: "none", stroke: "#7c7a73", "stroke-width": 1.2, "stroke-dasharray": "5 5" }, g);
   }
 
   colour(fn) { this.segs.forEach((seg, i) => seg.setAttribute("stroke", fn(i))); }

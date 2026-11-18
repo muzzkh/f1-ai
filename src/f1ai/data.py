@@ -495,7 +495,7 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
 
     Columns: Time (s from lap start), Distance (m, integrated from speed),
     Speed (km/h), Throttle (%), Brake (0/100), nGear, RPM, DRS (0/1, NaN from
-    2026 when DRS no longer exists), X, Y (m).
+    2026 when DRS no longer exists), X, Y, Z (m).
     """
     drv = resolve_driver(ses, driver)
     laps = ses.laps[(ses.laps["Driver"] == drv) & ses.laps["LapStart"].notna() & ses.laps["LapTime"].notna()]
@@ -541,16 +541,12 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
     dist = np.concatenate([[v[0] * t[0]], v[0] * t[0] + np.cumsum(0.5 * (v[1:] + v[:-1]) * np.diff(t))])
     tel.insert(1, "Distance", dist)
 
-    tel["X"], tel["Y"] = np.nan, np.nan
-    loc = pd.DataFrame(_openf1("location", **window))
+    tel["X"], tel["Y"], tel["Z"] = np.nan, np.nan, np.nan
+    loc = location(ses, num, t0, t1)
     if len(loc) > 20:
-        loc["date"] = _utc(loc["date"])
-        loc = loc.sort_values("date").drop_duplicates("date")
-        loc = loc[(loc["x"] != 0) | (loc["y"] != 0)]
         lt = (loc["date"] - t0).dt.total_seconds().values
-        if len(lt) > 20:
-            tel["X"] = np.interp(t, lt, loc["x"].values / 10.0)
-            tel["Y"] = np.interp(t, lt, loc["y"].values / 10.0)
+        for col in ("X", "Y", "Z"):
+            tel[col] = np.interp(t, lt, loc[col].values)
 
     tel.attrs.update(
         driver=drv,
@@ -563,14 +559,40 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
     return tel.copy()
 
 
+def location(ses: Session, driver_number: int, t0: pd.Timestamp | None = None,
+             t1: pd.Timestamp | None = None) -> pd.DataFrame:
+    """GPS position of one car: date, X, Y, Z in metres. With no time window
+    it returns the whole session (one large request, about 4 MB for a race)."""
+    params: dict[str, Any] = {"session_key": ses.session_key, "driver_number": int(driver_number)}
+    if t0 is not None:
+        params["date>="] = _fmt(t0)
+    if t1 is not None:
+        params["date<"] = _fmt(t1)
+    loc = pd.DataFrame(_openf1("location", **params))
+    cols = ["date", "X", "Y", "Z"]
+    if loc.empty:
+        return pd.DataFrame(columns=cols)
+    loc["date"] = _utc(loc["date"])
+    loc = loc.sort_values("date").drop_duplicates("date")
+    loc = loc[(loc["x"] != 0) | (loc["y"] != 0)]  # 0,0 means no fix
+    z = loc["z"].where(loc["z"] != 0).astype(float)  # a zero height is a dropout, not sea level
+    out = pd.DataFrame({"date": loc["date"], "X": loc["x"] / 10.0, "Y": loc["y"] / 10.0,
+                        "Z": z.interpolate(limit_direction="both") / 10.0})
+    return out.reset_index(drop=True)
+
+
 def circuit_info(ses: Session) -> dict:
     """Raw circuit description from MultiViewer: track outline (`x`, `y` in
     1/10 m), numbered `corners`, `marshalSectors` and a display `rotation`.
     Empty dict when unavailable."""
-    if not ses.circuit_key:
+    return circuit_info_by_key(ses.circuit_key, ses.year)
+
+
+def circuit_info_by_key(circuit_key: int | None, year: int) -> dict:
+    if not circuit_key:
         return {}
     try:
-        info = _fetch_json(f"https://api.multiviewer.app/api/v1/circuits/{ses.circuit_key}/{ses.year}", None)
+        info = _fetch_json(f"https://api.multiviewer.app/api/v1/circuits/{int(circuit_key)}/{int(year)}", None)
     except DataError:
         return {}
     return info if isinstance(info, dict) else {}
@@ -626,4 +648,36 @@ def standings(year: int) -> dict:
                     "wins": int(s["wins"]),
                 }
             )
+    return out
+
+
+def _driver_standings(payload: Any) -> list[dict]:
+    lists = payload.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", []) if isinstance(payload, dict) else []
+    out = []
+    for s in (lists[0].get("DriverStandings", []) if lists else []):
+        out.append({
+            "position": int(s.get("position", 0) or 0),
+            "driver": f"{s['Driver']['givenName']} {s['Driver']['familyName']}",
+            "code": s["Driver"].get("code") or s["Driver"]["familyName"][:3].upper(),
+            "team": s["Constructors"][-1]["name"] if s.get("Constructors") else None,
+            "points": float(s["points"]), "wins": int(s["wins"]),
+        })
+    return out
+
+
+def standings_after(year: int, rnd: int) -> list[dict]:
+    """Driver standings as they stood after a given round."""
+    return _driver_standings(_fetch_json(f"{JOLPICA}{int(year)}/{int(rnd)}/driverstandings.json?limit=100", _season_ttl(int(year))))
+
+
+def season_winners(year: int) -> dict[int, dict]:
+    """Round number -> winner (code, name, team) for every race run so far."""
+    d = _fetch_json(f"{JOLPICA}{int(year)}/results/1.json?limit=100", _season_ttl(int(year)))
+    races = d.get("MRData", {}).get("RaceTable", {}).get("Races", []) if isinstance(d, dict) else []
+    out = {}
+    for race in races:
+        res = (race.get("Results") or [{}])[0]
+        drv = res.get("Driver", {})
+        out[int(race["round"])] = {"code": drv.get("code"), "name": f"{drv.get('givenName', '')} {drv.get('familyName', '')}".strip(),
+                                   "team": res.get("Constructor", {}).get("name")}
     return out

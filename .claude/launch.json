@@ -25,18 +25,6 @@
         "docs"
       ],
       "port": 8600
-    },
-    {
-      "name": "f1ai-next",
-      "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8610",
-        "--directory",
-        "site"
-      ],
-      "port": 8610
     }
   ]
 }
