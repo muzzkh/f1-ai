@@ -27,8 +27,8 @@ def _bgr(hex_colour: str) -> np.ndarray:
 
 
 C = {k: _bgr(v) for k, v in {
-    "sky_top": "#05060a", "sky_low": "#2a1d5c", "glow": "#7a4fe0", "ground_far": "#161327", "ground_near": "#0b0d10",
-    "fog": "#1d1838", "asphalt_a": "#30333b", "asphalt_b": "#2c2f37", "line": "#f4f1ea", "kerb_r": "#e23a4a",
+    "sky_top": "#070818", "sky_low": "#3a1f5e", "glow": "#ff7a3a", "ground_far": "#23162a", "ground_near": "#0c0d11",
+    "fog": "#2a1a33", "asphalt_a": "#30333b", "asphalt_b": "#2c2f37", "line": "#f4f1ea", "kerb_r": "#e23a4a",
     "kerb_w": "#f1eee7", "verge": "#17221d", "skyline": "#090a10", "board": "#14161b", "panel": "#0d0f12", "car": "#15171c", "rubber": "#26292f",
 }.items()}
 
@@ -62,8 +62,8 @@ class TrackScene:
         bg = np.zeros((h, w, 3), np.float32)
         t = (np.arange(hy) / max(hy - 1, 1))[:, None, None]
         bg[:hy] = C["sky_top"] * (1 - t) ** 1.6 + C["sky_low"] * (1 - (1 - t) ** 1.6)
-        glow = np.exp(-((np.arange(hy) - hy) / (h * 0.06)) ** 2)[:, None, None]
-        bg[:hy] += (C["glow"] - bg[:hy]) * glow * 0.55
+        glow = np.exp(-((np.arange(hy) - hy) / (h * 0.085)) ** 2)[:, None, None]
+        bg[:hy] += (C["glow"] - bg[:hy]) * glow * 0.8
         g = (np.arange(h - hy) / max(h - hy - 1, 1))[:, None, None]
         bg[hy:] = C["ground_far"] * (1 - g) ** 2 + C["ground_near"] * (1 - (1 - g) ** 2)
         self.bg = np.clip(bg, 0, 255).astype(np.uint8)

@@ -1,6 +1,6 @@
 // Race weekend page: hero (result, circuit, live lap) and the race story below it.
 
-import { $, esc, el, lapTime, reduced, params, context, shell, load, COMPOUND, compoundName } from "./lib.js";
+import { $, esc, el, lapTime, reduced, params, context, shell, load, COMPOUND, compoundName, inkOn } from "./lib.js";
 import { Track, ramp, PEDAL } from "./track.js";
 import { cluster } from "./cluster.js";
 import { elevation } from "./track3d.js";
@@ -17,7 +17,10 @@ $("eyebrow").innerHTML = [`Round ${E.round}`, E.date, `${E.circuit}, ${E.country
 $("title").innerHTML = `${esc(E.name.replace(/ Grand Prix$/, ""))}<br><em>Grand Prix</em>`;
 
 const [p1, p2, p3] = R;
-$("winner").style.setProperty("--team", p1.color);
+// the page wears the winner's colours
+$("hero").style.setProperty("--team", p1.color);
+$("hero").style.setProperty("--on-team", inkOn(p1.color));
+$("roundNo").textContent = String(E.round).padStart(2, "0");
 $("winner").innerHTML = `
   <span class="winner__tag t-label">Winner</span><span class="winner__bar"></span>
   <span class="winner__code t-display">${esc(p1.code)}</span>

@@ -27,6 +27,12 @@ export const lapTime = (s) => {
 };
 export const signed = (v, n = 3) => (v == null || !isFinite(v) ? "-" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(n)}`);
 
+/** Black or white, whichever reads better on a given team colour. */
+export const inkOn = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.3 ? "#131316" : "#ffffff";
+};
+
 export const COMPOUND = { SOFT: "#f0384a", MEDIUM: "#f5c400", HARD: "#ebe9e3", INTERMEDIATE: "#3fbf5a", WET: "#3987e5", UNKNOWN: "#6b6e76" };
 export const compoundName = (c) => (c || "unknown").charAt(0) + (c || "unknown").slice(1).toLowerCase();
 
@@ -103,7 +109,8 @@ export const focus = {
 export function responsive(host, render) {
   let last = 0, timer;
   const run = () => {
-    const w = Math.round(host.clientWidth);
+    const cs = getComputedStyle(host); // draw inside the padding of a panel
+    const w = Math.round(host.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
     if (w && w !== last) { last = w; render(w); }
   };
   new ResizeObserver(() => { clearTimeout(timer); timer = setTimeout(run, 80); }).observe(host);

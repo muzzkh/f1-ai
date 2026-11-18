@@ -1,6 +1,6 @@
 // Lap duel: two laps raced against each other on the real circuit.
 
-import { $, esc, el, lapTime, reduced, params, context, shell, load, tip, responsive, compoundName } from "./lib.js";
+import { $, esc, el, lapTime, reduced, params, context, shell, load, tip, responsive, compoundName, inkOn } from "./lib.js";
 import { Track } from "./track.js";
 import { cluster } from "./cluster.js";
 import { lin, INK, label } from "./charts.js";
@@ -21,10 +21,10 @@ document.title = `${A.code} v ${B.code} · ${E.name} ${E.year} · F1 AI`;
 $("eyebrow").innerHTML = [`${D.session}`, `Round ${E.round}`, `${E.circuit}, ${E.country}`].map((s) => `<span>${esc(s)}</span>`).join("");
 const faster = D.gap > 0 ? A : B;
 $("versus").innerHTML = `
-  <div class="vs vs--a" style="--team:${colA}"><span class="vs__code t-display">${esc(A.code)}</span>
+  <div class="vs vs--a" style="--team:${colA};--on:${inkOn(colA)}"><span class="vs__code t-display">${esc(A.code)}</span>
     <span class="vs__name">${esc(A.name)}<small>${esc(A.team)}</small></span><b class="t-num">${lapTime(A.time)}</b></div>
   <div class="vs__gap"><span class="t-label">Gap</span><b class="t-num">${Math.abs(D.gap).toFixed(3)}</b><small>${esc(faster.code)} faster</small></div>
-  <div class="vs vs--b" style="--team:${colB}"><b class="t-num">${lapTime(B.time)}</b>
+  <div class="vs vs--b" style="--team:${colB};--on:${inkOn(colB)}"><b class="t-num">${lapTime(B.time)}</b>
     <span class="vs__name">${esc(B.name)}<small>${esc(B.team)}</small></span><span class="vs__code t-display">${esc(B.code)}</span></div>`;
 
 // ---------- circuit: who is faster where ----------

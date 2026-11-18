@@ -1,76 +1,78 @@
 # Design brief
 
-One page. This sets the direction for the visual overhaul; the approval hero in
-`site/` is the first thing built from it.
+One page. This is the direction the website and dashboard are built to.
 
-## What the references do well
+## The idea: a race programme
 
-Reviewed 18 November 2026.
+The site should feel like something printed for race day, not a software
+dashboard: paper pages, heavy slanted headlines, hard printed shadows, and
+dark timing panels dropped into the page like TV graphics in a magazine.
+Colour comes from the sport itself rather than from a brand palette.
 
-**formula1.com** - charcoal surfaces, one wide geometric display face used in
-capitals, a single hot accent, full-bleed photography under a gradient, dense
-results tables with thin dividers and team colour as a small dot, pill-shaped
-filters, a countdown strip. It feels official because it is consistent and
-dense, not because it is decorated.
+An earlier direction (near-black pages with a single purple accent, thin
+grey rules, rounded pills and glow) was dropped: it was monochrome, and it
+looked like every other dark dashboard.
 
-**landonorris.com** - one enormous focal object per screen, type set far larger
-than expected, two type voices played against each other (a heavy grotesk and a
-high-contrast serif), a single acid accent, faint contour lines as texture,
-very small precise interface elements pinned to the corners, and scroll-driven
-scene changes. It feels premium because of scale contrast and restraint.
+## Where the colour comes from
 
-## What we take, and what we do not
-
-We take the principles: one focal object, big confident type, a strict grid,
-one accent, team colour as the organising device for data, small precise
-labels, purposeful motion. We do not take either site's logo, typeface,
-photography, colour pairing, textures or page layouts.
-
-## Our identity: the timing screen
-
-The idea is the pit-wall timing screen, where **purple means fastest**. That
-convention belongs to the sport's data, not to any brand, and it gives every
-colour a meaning.
-
-| Role | Value | Use |
+| Source | Colour | Used for |
 |---|---|---|
-| Carbon (background) | `#0a0b0d` | page |
-| Surface / raised | `#121418` / `#1a1d23` | panels, components |
-| Hairline | `#2a2e37` | dividers, grids |
-| Paper (text) | `#f4f1ea` | headings, values |
-| Secondary / muted text | `#b8b4aa` / `#7c7a73` | labels, notes |
-| Purple sector (accent) | `#a26bff` | fastest, focus, interactive, speed ramp |
-| Throttle / brake | `#35d07f` / `#ff4d5a` | pedal inputs only |
-| Team colours | from the data | anything that identifies a driver or team |
+| The teams | from the data | Each race page wears its winner's colours across the whole hero; the lap duel splits between the two drivers' colours; team colour marks every driver everywhere |
+| Kerbs | racing red `#e3262e` and white | The brand colour, section numbers, the stripe under the header, panel tops |
+| Flags and pit boards | yellow `#ffd23c` on black | Headline numbers, active tabs, start line and sector marks |
+| Chequered flag | black and white | Footer, plain page headers |
+| Timing screens | purple `#a26bff`, green | Purple means fastest (sector done, speed ramp); green for throttle and "go" |
+| Tyres | red, yellow, white, green, blue | Compounds, always in their real colours |
+| Paper and asphalt | `#f1ede2` and `#16161a` | Pages and timing panels |
 
-No team uses purple, so the accent never collides with a car.
+No team uses our red-white-yellow combination as a block, and we never use a
+team's colour for anything except that team.
 
-**Focal object:** the circuit itself, drawn from real geometry, large enough to
-bleed off the grid. Where the references use a photograph or a portrait, we use
-the track.
+## Type
 
-**Type:** Archivo (variable width and weight). Expanded and heavy for display,
-normal width for text, condensed capitals for small labels - three voices from
-one family. JetBrains Mono for every number, so times and speeds line up like a
-timing screen.
+**Archivo**, expanded, black weight, italic, capitals for headlines: wide and
+leaning forward. **Barlow Condensed** for labels and every number: the
+condensed italic numerals read like pit boards and timing boards. Body text
+is Archivo at normal width.
 
-**Texture:** our own data, not borrowed patterns - sector ticks, a faint
-measurement grid behind the circuit, telemetry traces as section dividers.
+## Shapes and texture
 
-**Grid:** 12 columns, 1320 px maximum, 24 px gutters; 4 columns below 900 px;
-8 px spacing unit. Corners are 4 px (precise, technical), never pill-shaped
-except on toggles.
+- **The slant.** Tabs, tags, bars and markers lean 11 degrees, the way racing
+  numbers and liveries do. Nothing is a rounded pill.
+- **Hard shadows.** Panels and cards sit on an offset block of solid colour,
+  like a two-colour print, instead of soft glows.
+- **Kerb stripe** under the header and the hero; **chequered flag** at the foot
+  of every page; **livery stripes** across heroes.
+- **Race numbers.** Sections are numbered in red; the round number sits
+  oversized and outlined behind the hero.
 
-**Motion:** motion shows data, never decorates. The circuit draws itself once on
-load, the car laps in real time, gauges follow the telemetry. 200 ms ease-out
-for interface changes. Nothing autoplays under `prefers-reduced-motion`.
+## Layout
 
-**Charts:** one y-axis per chart; team colour for identity with a dashed line for
-the second driver of a team; one-hue ramps for magnitude (the purple ramp for
-speed); labels in text colours; hover detail on every mark.
+12 columns, 1320 px maximum, 24 px gutters; one column on phones, where the
+circuit moves up to sit straight under the winner. The focal object of every
+page is the circuit itself, drawn from real geometry on a dark panel.
+
+## Charts
+
+One y-axis per chart; team colour for identity with a dashed line for the
+second driver of a team; one-hue ramps for magnitude; labels in text colours;
+hover detail on every mark. Charts with many team-coloured lines always sit
+on dark panels, where every team colour stays readable.
+
+## Motion
+
+Motion shows data, never decorates: the circuit draws itself once, the car
+laps in real time, gauges follow the telemetry. Nothing autoplays under
+`prefers-reduced-motion`.
+
+## What we do not borrow
+
+The references (formula1.com, landonorris.com) set the bar for craft: scale,
+confidence, strict grids, colour discipline. We do not use either site's
+logo, typeface, photography, textures or layouts.
 
 ## What stays honest
 
-Track width and kerbs are not in any data source, so they are drawn to a
-stylised width and labelled as such. Car telemetry is sampled about four times
-a second, and every graphic that implies finer precision says so.
+Track width, kerbs and the scenery in generated video are stylised and
+labelled as such. Car telemetry is sampled about four times a second, and
+every graphic that implies finer precision says so.

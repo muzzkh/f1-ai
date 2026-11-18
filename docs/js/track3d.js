@@ -54,7 +54,7 @@ export function elevation(host, T, colourAt) {
       g.globalAlpha = 1; g.strokeStyle = col; g.lineWidth = 3.2;
       g.beginPath(); g.moveTo(top[i][0], top[i][1]); g.lineTo(top[j][0], top[j][1]); g.stroke();
     }
-    g.font = '600 11px "JetBrains Mono", monospace'; g.textAlign = "center";
+    g.font = '700 13px "Barlow Condensed", monospace'; g.textAlign = "center";
     for (const c of T.corners) {
       const p = top[c.i % n];
       g.fillStyle = "#7c7a73"; g.fillText(c.label, p[0], p[1] - 9);
