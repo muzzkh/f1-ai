@@ -563,15 +563,23 @@ def lap_telemetry(ses: Session, driver: str | int, lap_number: int | None = None
     return tel.copy()
 
 
-def circuit_corners(ses: Session) -> pd.DataFrame:
-    """Official corner numbers with track coordinates in metres (may be empty)."""
-    cols = ["Corner", "X", "Y"]
+def circuit_info(ses: Session) -> dict:
+    """Raw circuit description from MultiViewer: track outline (`x`, `y` in
+    1/10 m), numbered `corners`, `marshalSectors` and a display `rotation`.
+    Empty dict when unavailable."""
     if not ses.circuit_key:
-        return pd.DataFrame(columns=cols)
+        return {}
     try:
         info = _fetch_json(f"https://api.multiviewer.app/api/v1/circuits/{ses.circuit_key}/{ses.year}", None)
     except DataError:
-        return pd.DataFrame(columns=cols)
+        return {}
+    return info if isinstance(info, dict) else {}
+
+
+def circuit_corners(ses: Session) -> pd.DataFrame:
+    """Official corner numbers with track coordinates in metres (may be empty)."""
+    cols = ["Corner", "X", "Y"]
+    info = circuit_info(ses)
     rows = [
         {
             "Corner": f"T{c['number']}{c.get('letter') or ''}",

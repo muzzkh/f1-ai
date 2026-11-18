@@ -1,0 +1,50 @@
+/* Design tokens. See design/brief.md. */
+:root {
+  /* colour */
+  --carbon: #0a0b0d;
+  --surface: #121418;
+  --raised: #1a1d23;
+  --hairline: #2a2e37;
+  --paper: #f4f1ea;
+  --ink-2: #b8b4aa;
+  --muted: #7c7a73;
+  --purple: #a26bff;        /* purple sector: fastest, focus, interactive */
+  --purple-deep: #3a1d7a;
+  --throttle: #35d07f;
+  --brake: #ff4d5a;
+  --asphalt: #1c1f25;
+
+  /* type */
+  --font: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  /* layout */
+  --max: 1320px;
+  --gutter: 24px;
+  --u: 8px;
+  --radius: 4px;
+
+  /* motion */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --fast: 200ms;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--carbon);
+  color: var(--paper);
+  font: 400 16px/1.5 var(--font);
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+
+/* three voices from one family */
+.t-display { font-family: var(--font); font-weight: 800; line-height: 0.88; font-stretch: 125%; letter-spacing: -0.02em; text-transform: uppercase; }
+.t-label { font-weight: 600; font-stretch: 75%; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.t-num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-feature-settings: "zero" 1; }
+
+:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }

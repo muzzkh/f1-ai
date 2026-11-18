@@ -32,3 +32,24 @@ def test_comparison_matches_official_gap():
     assert c["frame"]["Delta"].iloc[-1] == pytest.approx(c["lap_delta_s"], abs=0.01)
     assert c["aligned_by"] == "gps"
     assert len(c["corners"]) >= 10
+
+
+def test_track_geometry_is_a_closed_lap(race):
+    import numpy as np
+
+    from f1ai import track
+
+    lap = an.lap_telemetry(race, "VER")
+    trk = track.build_track(race, lap)
+    x, y = trk["x"], trk["y"]
+    gaps = np.hypot(np.diff(np.append(x, x[0])), np.diff(np.append(y, y[0])))
+    assert gaps.max() < trk["step"] * 1.5                     # evenly sampled and closed
+    assert trk["length"] == pytest.approx(5281, rel=0.03)     # Yas Marina lap distance
+    assert len(trk["corners"]) == 16
+    assert [c["s"] for c in trk["corners"]] == sorted(c["s"] for c in trk["corners"])
+
+    on = track.lap_on_track(trk, lap, (20.0, 40.0))
+    assert len(on["speed"]) == len(x)
+    assert (np.diff(on["time"]) >= 0).all()
+    assert on["time"][-1] == pytest.approx(on["lap_time"], abs=0.3)
+    assert 0 < on["sectors"][0] < on["sectors"][1] < trk["length"]

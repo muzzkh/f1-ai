@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F1 AI · race weekend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav__in">
+    <a class="mark" href="./">F1<i>AI</i></a>
+    <nav class="nav__links" aria-label="Sections">
+      <a aria-current="page">Race</a><a aria-disabled="true">Season</a><a aria-disabled="true">Lap duel</a>
+      <a aria-disabled="true">Video lab</a><a aria-disabled="true">About</a>
+    </nav>
+    <span class="round" id="round"></span>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero__grid">
+        <div class="copy">
+          <p class="eyebrow t-label" id="eyebrow"></p>
+          <h1 class="t-display" id="title"></h1>
+          <div class="winner" id="winner"></div>
+          <ol class="podium" id="podium"></ol>
+          <dl class="facts" id="facts"></dl>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="layers">
+            <div class="seg" role="group" aria-label="Colour the lap by">
+              <button type="button" data-layer="speed" aria-pressed="true">Speed</button>
+              <button type="button" data-layer="gear" aria-pressed="false">Gear</button>
+              <button type="button" data-layer="pedals" aria-pressed="false">Pedals</button>
+            </div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <svg class="track" id="track" role="img"></svg>
+        </div>
+      </div>
+
+      <div class="deck">
+        <div class="cluster" id="cluster"></div>
+        <div class="stage__lap" id="lapHud"></div>
+        <div class="trace">
+          <button class="play" id="play" type="button" aria-label="Pause the lap">
+            <svg viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M2 1h3.5v12H2zM8.5 1H12v12H8.5z"/></svg>
+          </button>
+          <svg id="trace" viewBox="0 0 1000 96" preserveAspectRatio="none" role="slider" aria-label="Position in the lap" tabindex="0"></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="board">
+    <div class="wrap">
+      <h2 class="t-display">Classification</h2>
+      <p class="sub">Top ten. Bars show the time gap to the winner; hatched rows finished a lap or more down.</p>
+      <div class="rows" id="rows"></div>
+    </div>
+  </section>
+
+  <footer class="wrap foot">
+    <p>Circuit shape, corner numbers and the lap are real data (OpenF1 timing and GPS, MultiViewer circuit survey). Track width and kerbs are drawn to a stylised width: no public source has them. Car telemetry is sampled about four times a second, so the trace is smooth between samples rather than exact.</p>
+    <p>Unofficial fan project. Not associated in any way with the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX and related marks are trade marks of Formula One Licensing B.V.</p>
+  </footer>
+</main>
+
+<script type="module" src="js/hero.js"></script>
+</body>
+</html>
