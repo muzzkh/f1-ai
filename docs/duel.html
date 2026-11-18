@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lap duel · F1 AI</title>
+<meta name="description" content="Two qualifying laps raced against each other on the real circuit, with live gauges, the gap around the lap and every corner compared.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0b0d%22/><path d=%22M7 20l4-8h14l-4 8z%22 fill=%22%23a26bff%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=JetBrains+Mono:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="nav" id="nav"></header>
+<main>
+  <section class="hero hero--duel">
+    <div class="wrap">
+      <p class="eyebrow t-label" id="eyebrow"></p>
+      <div class="versus" id="versus"></div>
+      <div class="duel">
+        <div class="duel__side" id="sideA"></div>
+        <div class="stage">
+          <div class="layers"><div class="legend" id="legend"></div></div>
+          <svg class="track" id="track" role="img"></svg>
+        </div>
+        <div class="duel__side" id="sideB"></div>
+      </div>
+      <div class="deck deck--duel">
+        <button class="play" id="play" type="button" aria-label="Pause the laps">
+          <svg viewBox="0 0 14 14" aria-hidden="true"><path id="playIcon" d="M2 1h3.5v12H2zM8.5 1H12v12H8.5z"/></svg>
+        </button>
+        <div class="live"><span class="t-label">On track now</span><b class="t-num" id="liveGap">-</b><small id="liveWho"></small></div>
+        <div class="live"><span class="t-label">Lap time</span><b class="t-num" id="timer">0:00.000</b><small>both cars start together</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Around the lap</h2>
+        <p>Both laps against distance. The gap rises where the first driver gains and falls where they lose. Drag across the chart to move both cars.</p></header>
+      <div id="traces"></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <header class="band__head"><h2 class="t-display">Corner by corner</h2>
+        <p>Each driver's line through every corner, from GPS. Dots mark the slowest point, ticks where braking starts. Positions are sampled about four times a second, so treat lines and gains as indicative.</p></header>
+      <div class="corners" id="corners"></div>
+    </div>
+  </section>
+</main>
+<footer id="foot"></footer>
+<script type="module" src="js/duel.js"></script>
+</body>
+</html>

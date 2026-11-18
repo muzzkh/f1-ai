@@ -201,3 +201,51 @@ svg.chart { display: block; overflow: visible; touch-action: pan-y; }
   .fade { animation: none; opacity: 1; }
   * { transition: none !important; }
 }
+
+/* ---------- lap duel ---------- */
+.hero--duel { padding-top: 30px; }
+.versus { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: var(--gutter); align-items: center; margin-bottom: 14px; }
+.vs { display: flex; align-items: center; gap: 16px; border-bottom: 4px solid var(--team); padding-bottom: 12px; min-width: 0; }
+.vs--b { justify-content: flex-end; text-align: right; }
+.vs__code { font-size: clamp(2.6rem, 6vw, 5rem); font-style: italic; line-height: .86; }
+.vs__name { font-weight: 700; font-size: 1.05rem; line-height: 1.2; min-width: 0; }
+.vs__name small { display: block; color: var(--ink-2); font-weight: 400; font-size: .85rem; }
+.vs > b { font-size: clamp(1.1rem, 2vw, 1.6rem); margin-left: auto; }
+.vs--b > b { margin: 0 auto 0 0; }
+.vs__gap { text-align: center; display: grid; gap: 2px; }
+.vs__gap b { font-size: clamp(1.6rem, 3.2vw, 2.6rem); color: var(--purple); line-height: 1; }
+.vs__gap small { color: var(--ink-2); font-size: .82rem; }
+.duel { display: grid; grid-template-columns: 200px minmax(0, 1fr) 200px; gap: var(--gutter); align-items: center; }
+.duel__side { display: grid; gap: 14px; justify-items: center; }
+.duel__side .cluster { width: 100%; max-width: 200px; }
+.mini { margin: 0; width: 100%; border-top: 3px solid var(--team); }
+.mini div { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--hairline); font-size: .84rem; }
+.mini dt { color: var(--ink-2); }
+.mini dd { margin: 0; }
+.deck--duel { grid-template-columns: auto auto auto; justify-content: center; gap: 44px; }
+.live { display: grid; gap: 2px; }
+.live b { font-size: 1.7rem; line-height: 1.1; }
+.live small { color: var(--ink-2); font-size: .8rem; }
+
+.corners { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+.corner { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 14px 16px 12px; min-width: 0; }
+.corner header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.corner header b { font-size: 1.5rem; }
+.corner header span { font-size: .8rem; }
+.corner svg { display: block; width: 100%; height: auto; margin: 6px 0; }
+.corner dl { margin: 0; }
+.corner dl div { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--hairline); font-size: .82rem; }
+.corner dt { color: var(--ink-2); display: flex; align-items: center; gap: 7px; }
+.corner dt i { width: 12px; height: 3px; background: var(--team); }
+.corner dd { margin: 0; }
+
+@media (max-width: 900px) {
+  .versus { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .vs__gap { grid-column: 1 / -1; grid-row: 2; }
+  .vs { flex-wrap: wrap; gap: 4px 10px; }
+  .vs__name { display: none; }
+  .duel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .duel .stage { grid-column: 1 / -1; grid-row: 1; }
+  .deck--duel { gap: 18px; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); }
+  .live b { font-size: 1.15rem; }
+}

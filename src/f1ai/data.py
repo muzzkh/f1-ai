@@ -681,3 +681,21 @@ def season_winners(year: int) -> dict[int, dict]:
         out[int(race["round"])] = {"code": drv.get("code"), "name": f"{drv.get('givenName', '')} {drv.get('familyName', '')}".strip(),
                                    "team": res.get("Constructor", {}).get("name")}
     return out
+
+
+def overtakes(ses: Session) -> pd.DataFrame:
+    """On-track passes recorded by race control: date, by (car number), on, position."""
+    raw = pd.DataFrame(_openf1("overtakes", session_key=ses.session_key))
+    if raw.empty:
+        return pd.DataFrame(columns=["date", "by", "on", "position"])
+    return pd.DataFrame({"date": _utc(raw["date"]), "by": raw["overtaking_driver_number"].astype(int),
+                         "on": raw["overtaken_driver_number"].astype(int), "position": raw["position"]}).sort_values("date")
+
+
+def neutralised(ses: Session) -> list[tuple[pd.Timestamp, pd.Timestamp, str]]:
+    """Safety car, virtual safety car and red flag periods as (start, end, kind)."""
+    rc = ses.race_control.copy()
+    if rc.empty:
+        return []
+    rc["date"] = _utc(rc["date"])
+    return _neutralised_intervals(rc)

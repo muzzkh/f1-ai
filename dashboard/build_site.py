@@ -46,7 +46,7 @@ def is_current(out: Path) -> bool:
     return (built.get("year"), built.get("round")) == (year, rnd) and (round_dir(out, rnd) / "race.json").exists()
 
 
-def build_round(out: Path, year: int, rnd: int) -> dict:
+def build_round(out: Path, year: int, rnd: int, replay: bool = True) -> dict:
     race = data.load_session(year, rnd, "R")
     print(f"{race.title}")
     folder = round_dir(out, race.round)
@@ -56,10 +56,16 @@ def build_round(out: Path, year: int, rnd: int) -> dict:
         write(folder / "duel.json", sitedata.duel_payload(quali))
     except (data.DataError, ValueError, RuntimeError) as exc:
         print(f"  no lap duel for this weekend: {exc}")
+    if replay:
+        try:
+            write(folder / "replay.json", sitedata.replay_payload(race))
+        except (data.DataError, ValueError, RuntimeError) as exc:
+            print(f"  no replay for this weekend: {exc}")
     return sitedata.styles(race)
 
 
-def build(out: Path, year: int | None, rounds: list[int] | None, everything: bool, repo_url: str) -> None:
+def build(out: Path, year: int | None, rounds: list[int] | None, everything: bool, repo_url: str,
+          replay: bool = True) -> None:
     latest_year, latest_round, _ = data.latest_completed_event()
     year = year or latest_year
     done = sorted(int(x) for x in data.completed_events(year)["RoundNumber"])
@@ -71,7 +77,7 @@ def build(out: Path, year: int | None, rounds: list[int] | None, everything: boo
     st: dict = {}
     for rnd in rounds:
         try:
-            st = build_round(out, year, rnd)
+            st = build_round(out, year, rnd, replay)
         except (data.DataError, ValueError, RuntimeError) as exc:
             print(f"  round {rnd} skipped: {exc}")
 
@@ -80,6 +86,9 @@ def build(out: Path, year: int | None, rounds: list[int] | None, everything: boo
         st = sitedata.styles(data.load_session(year, max(built), "R"))
     print("season")
     season = sitedata.season_payload(year, built, {k: v["color"] for k, v in st.items()})
+    for x in season["rounds"]:  # which optional pages exist for each weekend
+        x["replay"] = (round_dir(out, x["round"]) / "replay.json").exists()
+        x["duel"] = (round_dir(out, x["round"]) / "duel.json").exists()
     season["latest"] = max(built) if built else None
     season["repo"] = repo_url
     season["generated"] = datetime.now(timezone.utc).strftime("%d %B %Y")
@@ -100,6 +109,7 @@ def main() -> None:
     p.add_argument("--round", type=int, action="append", help="build this round (repeatable)")
     p.add_argument("--all", action="store_true", help="build every finished weekend that has no data yet")
     p.add_argument("--if-new", action="store_true", help="do nothing if the latest weekend is already built")
+    p.add_argument("--no-replay", action="store_true", help="skip the race replay (22 large downloads per race)")
     p.add_argument("--out", default=str(ROOT / "docs"))
     p.add_argument("--repo-url", default="https://github.com/muzzkh/f1-ai")
     args = p.parse_args()
@@ -107,7 +117,7 @@ def main() -> None:
     if args.if_new and not (args.round or args.all) and is_current(out):
         print("site already shows the latest race weekend; nothing to do")
         return
-    build(out, args.year, args.round, args.all, args.repo_url)
+    build(out, args.year, args.round, args.all, args.repo_url, not args.no_replay)
 
 
 if __name__ == "__main__":

@@ -248,3 +248,56 @@ def season_payload(year: int, built: set[int], colors: dict[str, str] | None = N
     final = data.standings(year)
     return clean({"year": year, "last_round": last, "rounds": rounds, "drivers": drivers,
                   "constructors": final["constructors"]})
+
+
+def _deltas(values: np.ndarray) -> list[int]:
+    """First value then successive differences: small numbers compress well."""
+    v = np.round(values).astype(int)
+    return [int(v[0])] + np.diff(v).astype(int).tolist()
+
+
+def replay_payload(race: data.Session, hz: float = 2.0) -> dict:
+    """Every car's position through the whole race, for the replay.
+
+    Positions are in the circuit's display frame, whole metres, sampled
+    `hz` times a second and delta-encoded. Times are seconds from the start.
+    """
+    laps = race.laps
+    lap1 = laps[laps["LapNumber"] == 1].set_index("Driver")["LapTime"]
+    lap2 = laps[laps["LapNumber"] == 2].set_index("Driver")["LapStart"]
+    starts = (lap2 - pd.to_timedelta(lap1, unit="s")).dropna()
+    if starts.empty:
+        raise ValueError("Cannot place the start of this race in time.")
+    t0 = starts.min()
+    end = laps["LapStart"] + pd.to_timedelta(laps["LapTime"], unit="s")
+    nxt = laps.groupby("Driver")["LapStart"].shift(-1)
+    laps = laps.assign(End=end.fillna(nxt))
+    duration = float((laps["End"].max() - t0).total_seconds()) + 15.0
+    grid = np.arange(0.0, duration, 1.0 / hz)
+    rot = float(data.circuit_info(race).get("rotation", 0.0))
+
+    cars, lap_ends = [], {}
+    for code in data.driver_list(race):
+        row = race.drivers[race.drivers["Driver"] == code]
+        if row.empty:
+            continue
+        loc = data.location(race, int(row.iloc[0]["DriverNumber"]))
+        if len(loc) < 100:
+            continue
+        tt = (loc["date"] - t0).dt.total_seconds().values
+        x, y = track.rotate(loc["X"].values, loc["Y"].values, rot)
+        cars.append({"code": code, "x": _deltas(np.interp(grid, tt, x)), "y": _deltas(np.interp(grid, tt, y)),
+                     "last": round(float(min(tt.max(), duration)), 1)})
+        ends = laps[laps["Driver"] == code].sort_values("LapNumber")["End"]
+        lap_ends[code] = r((ends - t0).dt.total_seconds().dropna().values, 1)
+
+    flags = [{"kind": k, "from": round(max(0.0, (a - t0).total_seconds()), 1),
+              "to": round(min(duration, (b - t0).total_seconds()), 1)}
+             for a, b, k in data.neutralised(race) if (b - t0).total_seconds() > 0 and (a - t0).total_seconds() < duration]
+    numbers = dict(zip(race.drivers["DriverNumber"].astype(int), race.drivers["Driver"]))
+    passes = [{"t": round(float((o.date - t0).total_seconds()), 1), "by": numbers.get(o.by), "on": numbers.get(o.on),
+               "pos": None if pd.isna(o.position) else int(o.position)}
+              for o in data.overtakes(race).itertuples()
+              if numbers.get(o.by) and numbers.get(o.on) and 0 <= (o.date - t0).total_seconds() <= duration]
+    return clean({"hz": hz, "duration": round(duration, 1), "samples": len(grid), "cars": cars,
+                  "lap_ends": lap_ends, "flags": flags, "overtakes": passes})
