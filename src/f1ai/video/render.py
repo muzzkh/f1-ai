@@ -34,6 +34,21 @@ def render_font_path() -> Path | None:
     return None
 
 
+def fill_arc(img: np.ndarray, centre: tuple[float, float], r_in: float, r_out: float,
+             a0: float, a1: float, colour: tuple[int, int, int]) -> None:
+    """A ring segment between two angles (degrees, clockwise from 3 o'clock)
+    with exactly square ends. `cv2.ellipse` rounds the ends of a thick arc,
+    which makes a gauge read a few percent more than the value drawn."""
+    lo, hi = min(a0, a1), max(a0, a1)
+    if hi - lo < 1e-3:
+        return
+    ang = np.radians(np.linspace(lo, hi, max(2, int(np.ceil(hi - lo)) + 1)))
+    outer = np.stack([centre[0] + r_out * np.cos(ang), centre[1] + r_out * np.sin(ang)], axis=1)
+    inner = np.stack([centre[0] + r_in * np.cos(ang[::-1]), centre[1] + r_in * np.sin(ang[::-1])], axis=1)
+    pts = np.round(np.concatenate([outer, inner]) * 16).astype(np.int32)  # 1/16 px precision
+    cv2.fillPoly(img, [pts], colour, lineType=cv2.LINE_AA, shift=4)
+
+
 def _fill_color(el: dict) -> tuple[int, int, int]:
     """A BGR colour in the middle of the element's HSV detection range."""
     lo, hi = el["hsv_lo"], el["hsv_hi"]
@@ -124,15 +139,13 @@ class HudPainter:
             cv2.rectangle(frame, (x0, y0), (x1 - 1, y0 + int(round((y1 - y0) * frac)) - 1), col, -1)
 
     def _arc(self, frame, el, frac: float) -> None:
-        c = (int(round(el["center"][0] * self.w)), int(round(el["center"][1] * self.h)))
+        c = (el["center"][0] * self.w, el["center"][1] * self.h)
         r_in, r_out = el["r_inner"] * self.h, el["r_outer"] * self.h
-        r, thick = int(round((r_in + r_out) / 2)), max(2, int(round(r_out - r_in)))
         a0, a1 = el["start_deg"], el["end_deg"]
-        cv2.ellipse(frame, c, (r, r), 0, min(a0, a1), max(a0, a1), TRACK_GREY, thick, cv2.LINE_AA)
+        fill_arc(frame, c, r_in, r_out, a0, a1, TRACK_GREY)
         frac = float(np.clip(frac, 0, 1))
         if frac > 0.004:
-            a = a0 + (a1 - a0) * frac
-            cv2.ellipse(frame, c, (r, r), 0, min(a0, a), max(a0, a), _fill_color(el), thick, cv2.LINE_AA)
+            fill_arc(frame, c, r_in, r_out, a0, a0 + (a1 - a0) * frac, _fill_color(el))
 
     def _label(self, frame, text: str, cx: int, y: int, scale: float = 0.36, color=(170, 170, 170)) -> None:
         scale *= self.h / 720.0
@@ -263,7 +276,14 @@ def render_onboard(
     w, h = size
     vals = frame_values(tel, fps, max_seconds)
     dist = np.concatenate([[0.0], np.cumsum(vals["Speed"].values[:-1] / 3.6 / fps)])
-    painter, scene = HudPainter(layout, w, h), _Scene(w, h, noise)
+    if layout.get("painter") == "cluster":
+        from .cluster import ClusterPainter
+
+        painter = ClusterPainter(layout, w, h)
+    else:
+        painter = HudPainter(layout, w, h)
+    scene = _Scene(w, h, noise)
+    rpm_max = float(np.percentile(tel["RPM"], 99.5))
     writer, codec = _open_writer(out_path, fps, (w, h))
     try:
         for i, row in enumerate(vals.itertuples(index=False)):
@@ -272,7 +292,7 @@ def render_onboard(
                 cv2.putText(frame, caption, (int(24 * w / 1280), int(40 * h / 720)), cv2.FONT_HERSHEY_SIMPLEX,
                             0.7 * h / 720, (255, 255, 255), 2, cv2.LINE_AA)
             painter.draw(frame, {"speed": row.Speed, "gear": row.nGear, "throttle": row.Throttle,
-                                 "brake": row.Brake, "rpm": row.RPM, "drs": row.DRS})
+                                 "brake": row.Brake, "rpm": row.RPM, "drs": row.DRS, "rpm_max": rpm_max})
             writer.write(frame)
             if progress and i % 25 == 0:
                 progress(i / len(vals))

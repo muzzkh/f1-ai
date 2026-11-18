@@ -94,6 +94,19 @@ def build(out: Path, year: int | None, rounds: list[int] | None, everything: boo
     season["generated"] = datetime.now(timezone.utc).strftime("%d %B %Y")
     write(out / "data" / "season.json", season)
 
+    # site-wide files: the shared instrument cluster, the video lab, the tool list
+    from f1ai.video import cluster
+
+    write(out / "data" / "cluster.json", cluster.SPEC)
+    write(out / "data" / "about.json", sitedata.about_payload())
+    if built:
+        try:
+            quali = data.load_session(year, max(built), "Q")
+            print("video lab")
+            write(out / "data" / "video.json", sitedata.video_payload(quali, data.driver_list(quali)[0], out / "assets"))
+        except (data.DataError, ValueError, RuntimeError) as exc:
+            print(f"  video lab skipped: {exc}")
+
     (out / ".nojekyll").write_text("", encoding="utf-8")
     if built:
         name = next(x["name"] for x in season["rounds"] if x["round"] == max(built))

@@ -72,8 +72,10 @@ def validate(layout: dict) -> dict:
 
 
 def list_profiles() -> list[str]:
+    from . import cluster
+
     names = {p.stem for p in BUILTIN_DIR.glob("*.json")} | {p.stem for p in USER_PROFILE_DIR.glob("*.json")}
-    return sorted(names)
+    return sorted(names | {cluster.NAME})
 
 
 def load_profile(name_or_path: str | Path | dict) -> dict:
@@ -86,6 +88,10 @@ def load_profile(name_or_path: str | Path | dict) -> dict:
     for c in candidates:
         if c.exists():
             return validate(json.loads(c.read_text(encoding="utf-8")))
+    from . import cluster
+
+    if str(name_or_path) == cluster.NAME:  # generated from the shared cluster definition
+        return validate(cluster.profile())
     raise LayoutError(f"HUD profile '{name_or_path}' not found. Available: {', '.join(list_profiles())}")
 
 

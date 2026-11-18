@@ -12,7 +12,7 @@ def lap():
     return synthetic_lap(seed=4)
 
 
-@pytest.mark.parametrize("profile", ["demo-halo", "demo-bars"])
+@pytest.mark.parametrize("profile", ["cluster", "demo-halo", "demo-bars"])
 def test_round_trip_accuracy(tmp_path, lap, profile):
     info = video.render_onboard(lap, tmp_path / f"{profile}.mp4", profile, max_seconds=14, size=(960, 540))
     assert info["frames"] == 350

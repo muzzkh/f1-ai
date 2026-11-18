@@ -301,3 +301,66 @@ def replay_payload(race: data.Session, hz: float = 2.0) -> dict:
               if numbers.get(o.by) and numbers.get(o.on) and 0 <= (o.date - t0).total_seconds() <= duration]
     return clean({"hz": hz, "duration": round(duration, 1), "samples": len(grid), "cars": cars,
                   "lap_ends": lap_ends, "flags": flags, "overtakes": passes})
+
+
+def video_payload(ses: data.Session, driver: str, assets, seconds: float = 30.0, every: int = 5,
+                  cols: int = 8, rows: int = 8, frame_size: tuple[int, int] = (480, 270)) -> dict:
+    """Run the video round trip on a real lap and export it for the video lab:
+    a sheet of frames to flip through, what was read from each, and the truth."""
+    import cv2
+
+    from . import video
+    from .config import VIDEO_DIR
+    from .video import cluster, render
+
+    lap = an.lap_telemetry(ses, driver)
+    clip = VIDEO_DIR / "site-demo.mp4"
+    info = video.render_onboard(lap, clip, cluster.NAME, max_seconds=seconds,
+                                caption=f"{lap.attrs['driver']}  {ses.event_name} {ses.year}  {ses.name}  lap {lap.attrs['lap_number']}")
+    read = video.extract_telemetry(clip, cluster.NAME)
+    acc = video.accuracy(read, lap)
+    truth = render.frame_values(lap, info["fps"], seconds)
+
+    cap = cv2.VideoCapture(str(clip))
+    fw, fh = frame_size
+    sheet = np.zeros((rows * fh, cols * fw, 3), np.uint8)
+    frames, i = [], 0
+    while len(frames) < cols * rows:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if i % every == 0:
+            k = len(frames)
+            sheet[(k // cols) * fh:(k // cols + 1) * fh, (k % cols) * fw:(k % cols + 1) * fw] = cv2.resize(frame, (fw, fh), interpolation=cv2.INTER_AREA)
+            frames.append(i)
+        i += 1
+    cap.release()
+    assets.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(assets / "onboard-frames.jpg"), sheet, [cv2.IMWRITE_JPEG_QUALITY, 72])
+
+    def col(df, name, n=0):
+        return r(df[name].values, n) if name in df else []
+
+    prof = cluster.profile()
+    return clean({
+        "event": event_meta(ses), "session": ses.name, "driver": styles(ses)[lap.attrs["driver"]],
+        "lap": lap.attrs["lap_number"], "lap_time": lap.attrs["lap_time"],
+        "clip": {"fps": info["fps"], "frames": info["frames"], "seconds": info["duration_s"], "size": info["size"]},
+        "sheet": {"src": "assets/onboard-frames.jpg", "cols": cols, "rows": rows, "w": fw, "h": fh, "frames": frames},
+        "regions": prof["elements"], "accuracy": acc,
+        "t": r(read["Time"].values, 2),
+        "read": {"speed": col(read, "Speed"), "gear": col(read, "nGear"), "throttle": col(read, "Throttle"),
+                 "brake": col(read, "Brake"), "rpm": col(read, "RPM")},
+        "truth": {"speed": col(truth, "Speed"), "gear": col(truth, "nGear"), "throttle": col(truth, "Throttle"),
+                  "brake": col(truth, "Brake"), "rpm": col(truth, "RPM")},
+    })
+
+
+def about_payload() -> dict:
+    """The MCP tools, for the about page."""
+    import asyncio
+
+    from . import mcp_server
+
+    tools = asyncio.run(mcp_server.mcp.list_tools())
+    return {"tools": [{"name": t.name, "about": " ".join((t.description or "").split())} for t in tools]}
